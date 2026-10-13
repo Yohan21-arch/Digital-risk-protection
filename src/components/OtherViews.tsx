@@ -9,6 +9,7 @@ interface ViewProps {
   onInvestigate: (threat: ThreatItem) => void;
   onOpenTakedown: (threat?: ThreatItem) => void;
   onTriggerToast: (msg: string) => void;
+  onExportDossier?: () => void;
 }
 
 // 1. OVERVIEW DASHBOARD VIEW
@@ -275,7 +276,7 @@ export const AppMonitoringView: React.FC<ViewProps> = ({
   );
 };
 
-// 4. DETECTION CENTER VIEW
+// 4. DETECTION CENTER VIEW (With Relocated Compliance Logs & Issue Takedown Action)
 export const DetectionCenterView: React.FC<ViewProps> = ({
   threats,
   onInvestigate,
@@ -283,6 +284,7 @@ export const DetectionCenterView: React.FC<ViewProps> = ({
   onTriggerToast,
 }) => {
   const [filterSeverity, setFilterSeverity] = useState('All');
+  const [activeTabMode, setActiveTabMode] = useState<'detections' | 'compliance'>('detections');
 
   const filtered = threats.filter(
     (t) => filterSeverity === 'All' || t.riskCategory === filterSeverity
@@ -292,91 +294,157 @@ export const DetectionCenterView: React.FC<ViewProps> = ({
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-['JetBrains_Mono'] text-[10px] text-[#2b94d7] font-semibold bg-[#cce5ff] px-2 py-0.5 rounded">
+              INCIDENT TRIAGE & REMEDIATION
+            </span>
+          </div>
           <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Detection Center & Incident Queue
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
-            Complete triage workbench with automated neural classification and evidence chain-of-custody.
+            Complete triage workbench with automated neural classification, legal compliance logs, and takedown workflow.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto flex-wrap">
+          <button
+            onClick={() => setActiveTabMode(activeTabMode === 'detections' ? 'compliance' : 'detections')}
+            className={`px-3 py-1.5 border rounded-lg text-xs font-semibold font-['Manrope'] transition-colors cursor-pointer shrink-0 ${
+              activeTabMode === 'compliance'
+                ? 'bg-[#0f2930] text-white border-[#0f2930]'
+                : 'border-[#c2c7ca] text-[#001319] hover:bg-[#f3f4f3]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[15px] mr-1 align-text-bottom">gavel</span>
+            {activeTabMode === 'compliance' ? 'View Detection Queue' : 'Compliance Logs'}
+          </button>
           <button
             onClick={() => onTriggerToast('Exported detection records to CSV.')}
             className="px-3 py-1.5 border border-[#c2c7ca] rounded-lg text-xs font-semibold font-['Manrope'] hover:bg-[#f3f4f3] cursor-pointer shrink-0"
           >
             Export CSV
           </button>
+          {/* Relocated Primary Issue Takedown CTA */}
           <button
             onClick={() => onOpenTakedown()}
-            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold font-['Manrope'] cursor-pointer shrink-0"
+            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold font-['Manrope'] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs"
           >
-            Bulk Takedown
+            <span className="material-symbols-outlined text-[16px]">gavel</span>
+            <span>Issue Takedown</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs w-full min-w-0">
-        <div className="flex items-center justify-between mb-3.5 gap-2 flex-wrap">
-          <div className="flex items-center gap-1 bg-[#f3f4f3] p-1 rounded-lg shrink-0">
-            {['All', 'Critical', 'High', 'Trusted'].map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilterSeverity(s)}
-                className={`px-2.5 sm:px-3 py-1 rounded text-xs font-semibold cursor-pointer ${
-                  filterSeverity === s ? 'bg-white text-[#1a1c1c] shadow-xs' : 'text-[#515f74]'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-          <span className="font-['JetBrains_Mono'] text-xs text-[#515f74] shrink-0">
-            Showing {filtered.length} targets
-          </span>
-        </div>
-
-        <div className="overflow-x-auto custom-scrollbar w-full max-w-full">
-          <table className="w-full text-left border-collapse font-['Inter'] text-xs min-w-[620px]">
-            <thead>
-              <tr className="border-b border-[#eeeeed] font-['JetBrains_Mono'] text-[#515f74] uppercase text-[10px]">
-                <th className="py-2.5 px-3">Case ID</th>
-                <th className="py-2.5 px-3">Target Name</th>
-                <th className="py-2.5 px-3">Platform</th>
-                <th className="py-2.5 px-3">Identifier</th>
-                <th className="py-2.5 px-3">Risk</th>
-                <th className="py-2.5 px-3">Stamp</th>
-                <th className="py-2.5 px-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#eeeeed]">
-              {filtered.map((t) => (
-                <tr key={t.id} className="hover:bg-[#f9f9f8]">
-                  <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-[#515f74]">
-                    #{t.id.slice(0, 8)}
-                  </td>
-                  <td className="py-2.5 px-3 font-semibold text-[#1a1c1c] truncate max-w-[160px]">{t.name}</td>
-                  <td className="py-2.5 px-3 text-[#515f74]">{t.platform}</td>
-                  <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-red-700 truncate max-w-[140px]">{t.handleOrPkg}</td>
-                  <td className="py-2.5 px-3 font-['JetBrains_Mono'] font-bold text-red-700">
-                    {t.riskScore}/100
-                  </td>
-                  <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-[11px] text-[#72787a] truncate max-w-[120px]">
-                    {t.dateDetected}
-                  </td>
-                  <td className="py-2.5 px-3 text-right shrink-0">
-                    <button
-                      onClick={() => onInvestigate(t)}
-                      className="px-2.5 py-1 bg-[#0f2930] hover:bg-[#133942] text-white rounded text-xs font-semibold cursor-pointer shrink-0"
-                    >
-                      Investigate
-                    </button>
-                  </td>
-                </tr>
+      {activeTabMode === 'detections' ? (
+        <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs w-full min-w-0">
+          <div className="flex items-center justify-between mb-3.5 gap-2 flex-wrap">
+            <div className="flex items-center gap-1 bg-[#f3f4f3] p-1 rounded-lg shrink-0">
+              {['All', 'Critical', 'High', 'Trusted'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterSeverity(s)}
+                  className={`px-2.5 sm:px-3 py-1 rounded text-xs font-semibold cursor-pointer ${
+                    filterSeverity === s ? 'bg-white text-[#1a1c1c] shadow-xs' : 'text-[#515f74]'
+                  }`}
+                >
+                  {s}
+                </button>
               ))}
-            </tbody>
-          </table>
+            </div>
+            <span className="font-['JetBrains_Mono'] text-xs text-[#515f74] shrink-0">
+              Showing {filtered.length} targets
+            </span>
+          </div>
+
+          <div className="overflow-x-auto custom-scrollbar w-full max-w-full">
+            <table className="w-full text-left border-collapse font-['Inter'] text-xs min-w-[620px]">
+              <thead>
+                <tr className="border-b border-[#eeeeed] font-['JetBrains_Mono'] text-[#515f74] uppercase text-[10px]">
+                  <th className="py-2.5 px-3">Case ID</th>
+                  <th className="py-2.5 px-3">Target Name</th>
+                  <th className="py-2.5 px-3">Platform</th>
+                  <th className="py-2.5 px-3">Identifier</th>
+                  <th className="py-2.5 px-3">Risk</th>
+                  <th className="py-2.5 px-3">Stamp</th>
+                  <th className="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#eeeeed]">
+                {filtered.map((t) => (
+                  <tr key={t.id} className="hover:bg-[#f9f9f8]">
+                    <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-[#515f74]">
+                      #{t.id.slice(0, 8)}
+                    </td>
+                    <td className="py-2.5 px-3 font-semibold text-[#1a1c1c] truncate max-w-[160px]">{t.name}</td>
+                    <td className="py-2.5 px-3 text-[#515f74]">{t.platform}</td>
+                    <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-red-700 truncate max-w-[140px]">{t.handleOrPkg}</td>
+                    <td className="py-2.5 px-3 font-['JetBrains_Mono'] font-bold text-red-700">
+                      {t.riskScore}/100
+                    </td>
+                    <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-[11px] text-[#72787a] truncate max-w-[120px]">
+                      {t.dateDetected}
+                    </td>
+                    <td className="py-2.5 px-3 text-right shrink-0">
+                      <button
+                        onClick={() => onInvestigate(t)}
+                        className="px-2.5 py-1 bg-[#0f2930] hover:bg-[#133942] text-white rounded text-xs font-semibold cursor-pointer shrink-0"
+                      >
+                        Investigate
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Relocated Compliance Logs Sub-View */
+        <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs w-full min-w-0 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#eeeeed]">
+            <div>
+              <h2 className="font-['Manrope'] text-base font-bold text-[#1a1c1c]">
+                Enforcement & Compliance Audit Logs
+              </h2>
+              <p className="text-xs text-[#515f74]">
+                Legal notifications filed under statutory frameworks (15 U.S.C. § 1125, UDRP, DMCA).
+              </p>
+            </div>
+            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded font-['JetBrains_Mono'] text-xs font-bold">
+              AUDIT TRAIL SECURE
+            </span>
+          </div>
+
+          <div className="space-y-3 font-['Inter'] text-xs">
+            <div className="p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed] flex justify-between items-start gap-4">
+              <div>
+                <span className="font-bold text-[#1a1c1c] block">UDRP Fast-Track Expedited Suspension Notice</span>
+                <span className="text-[#515f74]">Dispatched to Namecheap Registrar Abuse Desk for domain paytm-support-desk.cc</span>
+                <span className="font-['JetBrains_Mono'] text-[10px] text-[#72787a] block mt-1">Hash: a49f82c...9e38d41 • 2026-10-12 22:10 UTC</span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-['JetBrains_Mono'] text-[10px] font-bold shrink-0">NOTICE SENT</span>
+            </div>
+
+            <div className="p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed] flex justify-between items-start gap-4">
+              <div>
+                <span className="font-bold text-[#1a1c1c] block">Play Protect Predatory APK Malicious Permission Revocation</span>
+                <span className="text-[#515f74]">Submitted to Google LLC Legal for pkg: com.paytm.rewards.bonus (READ_SMS Abuse)</span>
+                <span className="font-['JetBrains_Mono'] text-[10px] text-[#72787a] block mt-1">Hash: 98bc431...82910cc • 2026-10-11 16:30 UTC</span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-['JetBrains_Mono'] text-[10px] font-bold shrink-0">DELISTED</span>
+            </div>
+
+            <div className="p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed] flex justify-between items-start gap-4">
+              <div>
+                <span className="font-bold text-[#1a1c1c] block">Meta Brand Rights Protection Impersonation Filing</span>
+                <span className="text-[#515f74]">Submitted to Meta Platforms IP Desk for fraudulent lottery community page</span>
+                <span className="font-['JetBrains_Mono'] text-[10px] text-[#72787a] block mt-1">Hash: 4d82b01...9945fa1 • 2026-10-10 19:00 UTC</span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-['JetBrains_Mono'] text-[10px] font-bold shrink-0">DELISTED</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -434,17 +502,50 @@ export const VerifiedAssetsView: React.FC<ViewProps> = ({
   );
 };
 
-// 6. BRAND PROFILE VIEW
+// 6. BRAND PROFILE VIEW (With Relocated Organization Verification / KYC Status Card)
 export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs min-w-0">
         <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
-          Brand Legal Profile & KYC Attestation
+          Brand Legal Profile & Organization Verification (KYC)
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
           Cryptographic enterprise identity information filed for automated trademark enforcement.
         </p>
+      </div>
+
+      {/* Relocated Organization Verification Card (Item #6) */}
+      <div className="bg-[#002841] text-white border border-[#2b94d7]/30 rounded-xl p-5 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#2b94d7]/20 border border-[#2b94d7]/40 flex items-center justify-center font-['JetBrains_Mono'] font-bold text-sm text-[#cce5ff]">
+              AC
+            </div>
+            <div>
+              <div className="font-['Manrope'] text-base font-bold flex items-center gap-2">
+                <span>Acme Corp / One97 Global Perimeter</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              </div>
+              <span className="font-['JetBrains_Mono'] text-xs text-[#779199]">
+                Legal Entity DRP #4892 • KYC Tier-3 Sovereign Verified
+              </span>
+            </div>
+          </div>
+          <span className="font-['JetBrains_Mono'] text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded">
+            85% Verified
+          </span>
+        </div>
+
+        <div className="space-y-1 pt-1">
+          <div className="flex justify-between text-xs font-['Inter'] text-[#779199]">
+            <span>Compliance Verification Progress</span>
+            <span className="text-white font-semibold">Stage 3 of 4 Complete</span>
+          </div>
+          <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+            <div className="bg-[#2b94d7] h-full rounded-full transition-all duration-500" style={{ width: '85%' }}></div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 w-full min-w-0">
@@ -517,20 +618,57 @@ export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
   );
 };
 
-// 7. SETTINGS VIEW - Responsive Grid conforming to Section 5 requirement
+// 7. SETTINGS VIEW (With Relocated System Health Diagnostics)
 export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs min-w-0">
         <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
-          Platform Settings & Defense Thresholds
+          Platform Settings & System Health Diagnostics
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
-          Configure automated takedown triggers, escalation webhooks, and registrar API connections.
+          Configure automated takedown triggers, escalation webhooks, and inspect real-time system node health.
         </p>
       </div>
 
-      {/* Responsive Grid that handles side-by-side on desktop, naturally shrinking before stacking on smaller screens */}
+      {/* Relocated System Health Diagnostics Module (Item #4) */}
+      <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-4 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#eeeeed]">
+          <div>
+            <h2 className="font-['Manrope'] text-base font-bold text-[#1a1c1c] flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-600">dns</span>
+              <span>System Health & Node Status</span>
+            </h2>
+            <p className="text-xs text-[#515f74]">
+              High-availability Sentinel nodes monitoring global registrar registries.
+            </p>
+          </div>
+          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-['JetBrains_Mono'] text-xs font-bold rounded flex items-center gap-1.5 self-start sm:self-auto">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            ALL SYSTEMS OPERATIONAL
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-['Inter']">
+          <div className="p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed]">
+            <span className="text-[#515f74] font-medium block">DNSSEC Resolution Cluster</span>
+            <span className="font-bold text-[#1a1c1c] text-sm mt-0.5 block">100% Validated</span>
+            <span className="text-emerald-700 font-['JetBrains_Mono'] text-[10px]">Latency: 18ms</span>
+          </div>
+          <div className="p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed]">
+            <span className="text-[#515f74] font-medium block">Certificate Transparency Monitors</span>
+            <span className="font-bold text-[#1a1c1c] text-sm mt-0.5 block">Zero-Hour Real-Time</span>
+            <span className="text-emerald-700 font-['JetBrains_Mono'] text-[10px]">Streams: 24 active</span>
+          </div>
+          <div className="p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed]">
+            <span className="text-[#515f74] font-medium block">Adversarial Prober Gateway</span>
+            <span className="font-bold text-[#1a1c1c] text-sm mt-0.5 block">99.98% Uptime</span>
+            <span className="text-emerald-700 font-['JetBrains_Mono'] text-[10px]">Global nodes: 18</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-Column Responsive Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:grid-cols-2 gap-4 lg:gap-6 font-['Inter'] text-xs w-full min-w-0">
         {/* Card 1: Automated Enforcement Triggers */}
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-4 min-w-0">
@@ -607,7 +745,7 @@ export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
   );
 };
 
-// 8. ACTIVE TAKEDOWNS VIEW (Top Nav Tab)
+// 8. ACTIVE TAKEDOWNS VIEW (Top Nav Tab - With Issue Takedown Action)
 export const ActiveTakedownsView: React.FC<ViewProps> = ({
   takedowns,
   onOpenTakedown,
@@ -628,7 +766,7 @@ export const ActiveTakedownsView: React.FC<ViewProps> = ({
           className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-['Manrope'] font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 self-start md:self-auto"
         >
           <span className="material-symbols-outlined text-[16px]">gavel</span>
-          <span>New Legal Notice</span>
+          <span>Issue Takedown Notice</span>
         </button>
       </div>
 
@@ -679,8 +817,8 @@ export const ActiveTakedownsView: React.FC<ViewProps> = ({
   );
 };
 
-// 9. EVIDENCE LOGS VIEW (Top Nav Tab)
-export const EvidenceLogsView: React.FC<ViewProps> = ({ threats, onTriggerToast }) => {
+// 9. EVIDENCE LOGS VIEW (With Relocated Export Dossier CTA)
+export const EvidenceLogsView: React.FC<ViewProps> = ({ threats, onTriggerToast, onExportDossier }) => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
@@ -692,12 +830,16 @@ export const EvidenceLogsView: React.FC<ViewProps> = ({ threats, onTriggerToast 
             Immutable chain-of-custody recordings capturing web captures, network hops, and registrar transactions.
           </p>
         </div>
-        <button
-          onClick={() => onTriggerToast('Exporting cryptographic chain archive...')}
-          className="px-3.5 py-2 bg-[#0f2930] hover:bg-[#133942] text-white rounded-lg text-xs font-['Manrope'] font-semibold cursor-pointer shadow-xs shrink-0 self-start md:self-auto"
-        >
-          Download Signed Archive
-        </button>
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+          {/* Relocated Export Dossier Button (Item #12) */}
+          <button
+            onClick={() => onExportDossier?.()}
+            className="px-3.5 py-2 bg-[#0f2930] hover:bg-[#133942] text-white rounded-lg text-xs font-['Manrope'] font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+          >
+            <span className="material-symbols-outlined text-[16px]">file_download</span>
+            <span>Export Evidence Dossier</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-3.5 w-full min-w-0">
@@ -724,7 +866,7 @@ export const EvidenceLogsView: React.FC<ViewProps> = ({ threats, onTriggerToast 
   );
 };
 
-// 10. GLOBAL TELEMETRY VIEW (Top Nav Tab)
+// 10. GLOBAL TELEMETRY VIEW
 export const GlobalTelemetryView: React.FC<ViewProps> = () => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">

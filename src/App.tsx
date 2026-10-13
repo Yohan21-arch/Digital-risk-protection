@@ -243,10 +243,6 @@ export default function App() {
       <Sidebar
         currentTab={currentTab}
         onTabChange={handleTabChange}
-        onOpenTakedown={() => {
-          setTakedownTargetThreat(threats[0] || null);
-          setIsTakedownModalOpen(true);
-        }}
         threatCount={threats.length}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
@@ -255,20 +251,25 @@ export default function App() {
       {/* 2. MAIN VIEWPORT CONTAINER: Sidebar + Flexible Main Content = 100vw */}
       <div
         className={`flex-1 min-w-0 max-w-full min-h-screen flex flex-col bg-[#f9f9f8] transition-all duration-200 ${
-          isSidebarCollapsed ? 'ml-16' : 'ml-56 lg:ml-60 xl:ml-64'
+          isSidebarCollapsed ? 'ml-16' : 'ml-60 xl:ml-64'
         }`}
       >
         {/* TOP NAVIGATION BAR */}
         <TopNavbar
           currentBrand={brandQuery}
           onBrandChange={handleBrandChange}
-          activeSubTab={activeSubTab || (currentTab === 'Brand Search' ? 'Global Telemetry' : 'Global Telemetry')}
+          activeSubTab={activeSubTab}
           onSubTabChange={handleSubTabChange}
           activeTakedownsCount={takedowns.length}
           onExportDossier={() => setIsEvidenceDossierOpen(true)}
           onNewScan={handleTriggerScan}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           searchInputRef={searchInputRef}
+          onNavigateSettings={() => handleTabChange('Settings')}
+          onOpenTakedown={() => {
+            setTakedownTargetThreat(threats[0] || null);
+            setIsTakedownModalOpen(true);
+          }}
         />
 
         {/* MAIN SCROLLABLE CONTENT CANVAS */}

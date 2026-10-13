@@ -59,6 +59,11 @@
   --font-label-lg: "JetBrains Mono", monospace;
   --font-label-md: "JetBrains Mono", monospace;
   --font-label-sm: "JetBrains Mono", monospace;
+  --font-slabo: "Slabo 13px", serif;
+}
+
+.font-slabo {
+  font-family: 'Slabo 13px', serif;
 }
 
 *, *::before, *::after {
