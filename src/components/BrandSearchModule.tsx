@@ -1,3 +1,5 @@
+import { AnimatePresence } from 'motion/react';
+import { AnimatedNumber, MotionResult, ProgressFill, ScanStage } from './MotionUI';
 import React from 'react';
 import { ThreatItem, VerifiedAsset, PlatformType, RiskLevel } from '../types';
 
@@ -114,7 +116,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-[#1a1c1c] tabular-nums">
-              {totalDetections}
+              <AnimatedNumber value={totalDetections} />
             </span>
             <span className="font-['JetBrains_Mono'] text-[10px] sm:text-[11px] text-[#515f74]">
               for &ldquo;{currentBrand}&rdquo;
@@ -147,7 +149,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-red-700 tabular-nums">
-              {criticalCount}
+              <AnimatedNumber value={criticalCount} />
             </span>
             {criticalCount > 0 && (
               <span className="font-['JetBrains_Mono'] text-[9px] sm:text-[10px] text-red-800 font-semibold bg-red-100 px-1.5 py-0.5 rounded">
@@ -172,7 +174,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-amber-800 tabular-nums">
-              {highCount}
+              <AnimatedNumber value={highCount} />
             </span>
             <span className="font-['JetBrains_Mono'] text-[10px] sm:text-[11px] text-amber-800 truncate">
               Look-alike entities
@@ -200,7 +202,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-emerald-800 tabular-nums">
-              {verifiedAssets.length}
+              <AnimatedNumber value={verifiedAssets.length} />
             </span>
             <span className="font-['JetBrains_Mono'] text-[9px] sm:text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-semibold">
               Safe Harbor
@@ -223,7 +225,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-[#1a1c1c] tabular-nums">
-              {indexedNetworks}
+              <AnimatedNumber value={indexedNetworks} />
             </span>
             <span className="font-['JetBrains_Mono'] text-[10px] sm:text-[11px] text-emerald-700 font-semibold">
               In current results
@@ -370,7 +372,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
             <div className="flex items-center gap-2 min-w-0">
               <span
                 className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                  isScanning ? 'bg-[#2b94d7] animate-ping' : 'bg-emerald-500'
+                  isScanning ? 'bg-[#2b94d7]' : 'bg-emerald-500'
                 }`}
               ></span>
               <span className="font-['JetBrains_Mono'] text-xs font-semibold text-[#1a1c1c] truncate">
@@ -384,13 +386,16 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
             </span>
           </div>
 
+          <div role="progressbar" aria-label="Deterministic analysis progress" aria-valuemin={0} aria-valuemax={8} aria-valuenow={isScanning ? scanStep : 8} className="h-0.5 bg-[#eeeeed] mb-3 overflow-hidden rounded-full">
+            <ProgressFill value={(isScanning ? scanStep : 8) * 12.5} className="h-full bg-[#2b94d7]" />
+          </div>
           {/* Stepper Track */}
           <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2 min-w-0 w-full">
             {scanSteps.map((step, idx) => {
-              const isPassed = !isScanning || scanStep >= idx + 1;
+              const isPassed = !isScanning || scanStep > idx + 1;
               const isCurrent = isScanning && scanStep === idx + 1;
               return (
-                <div
+                <ScanStage active={isCurrent} complete={isPassed}
                   key={step.num}
                   className={`flex flex-col gap-1 border-t-2 pt-1.5 transition-all min-w-0 ${
                     isPassed
@@ -412,7 +417,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                         check_circle
                       </span>
                     ) : isCurrent ? (
-                      <span className="material-symbols-outlined text-[13px] text-[#2b94d7] animate-spin shrink-0">
+                      <span className="material-symbols-outlined text-[13px] text-[#2b94d7] shrink-0">
                         progress_activity
                       </span>
                     ) : (
@@ -422,7 +427,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                   <span className="text-[10px] sm:text-[11px] font-medium truncate font-['Inter']">
                     {step.desc}
                   </span>
-                </div>
+                </ScanStage>
               );
             })}
           </div>
@@ -514,10 +519,11 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
         </div>
 
         {/* Detection Results Queue (PART K: Friendly Empty State, PART N: Rich Results UI) */}
-        <div className="divide-y divide-[#eeeeed] w-full min-w-0">
+        <div className="relative divide-y divide-[#eeeeed] w-full min-w-0">
+          <AnimatePresence initial={false} mode="popLayout">
           {filteredThreats.length === 0 ? (
             /* PART K — NO-RESULT EXPERIENCE */
-            <div className="p-8 sm:p-12 text-center text-[#515f74] space-y-4">
+            <MotionResult key="empty-results" index={0} className="p-8 sm:p-12 text-center text-[#515f74] space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-[#0f2930]/5 border border-[#0f2930]/10 flex items-center justify-center text-[#515f74] mx-auto shadow-inner">
                 <span className="material-symbols-outlined text-3xl text-[#515f74]">
                   travel_explore
@@ -560,20 +566,20 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                 </div>
               </div>
               )}
-            </div>
+            </MotionResult>
           ) : (
             /* PART N — RESULTS UI: Clear, expressive result cards */
-            filteredThreats.map((item) => {
+            filteredThreats.map((item, index) => {
               const isTrusted = item.riskCategory === 'Trusted';
               const isCritical = item.riskCategory === 'Critical';
               const isHigh = item.riskCategory === 'High';
               const isMedium = item.riskCategory === 'Medium';
 
               return (
-                <div
+                <MotionResult index={index} scanning={isScanning}
                   key={item.id}
                   onClick={() => onInvestigate(item)}
-                  className={`p-4 sm:p-5 lg:p-6 hover:bg-[#f3f4f3]/40 transition-all cursor-pointer group w-full min-w-0 border-l-4 ${
+                  className={`p-4 sm:p-5 lg:p-6 hover:bg-[#f3f4f3]/40 transition-colors cursor-pointer group w-full min-w-0 border-l-4 ${
                     isCritical
                       ? 'border-l-red-600 bg-red-50/10'
                       : isHigh
@@ -764,15 +770,14 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                                 : 'text-[#1a1c1c]'
                             }`}
                           >
-                            Risk {item.riskScore}
+                            Risk <AnimatedNumber value={item.riskScore} />
                           </span>
                           <span className="font-['JetBrains_Mono'] text-[10px] sm:text-[11px] text-[#515f74]">
                             / 100
                           </span>
                         </div>
                         <div className="w-24 sm:w-32 bg-[#eeeeed] h-1.5 rounded-full overflow-hidden mt-1">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
+                          <ProgressFill value={Math.max(item.riskScore, isTrusted ? 0 : 4)} className={`h-full rounded-full ${
                               isCritical
                                 ? 'bg-red-600'
                                 : isHigh
@@ -780,11 +785,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                                 : isMedium
                                 ? 'bg-orange-500'
                                 : 'bg-emerald-500'
-                            }`}
-                            style={{
-                              width: `${Math.max(item.riskScore, isTrusted ? 0 : 4)}%`,
-                            }}
-                          ></div>
+                            }`} />
                         </div>
                       </div>
 
@@ -811,10 +812,11 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                       )}
                     </div>
                   </div>
-                </div>
+                </MotionResult>
               );
             })
           )}
+          </AnimatePresence>
         </div>
       </section>
 

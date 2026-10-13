@@ -1,3 +1,4 @@
+import { AnimatedNumber, InvestigationBackdrop, InvestigationPanel } from './MotionUI';
 import React from 'react';
 import { BRAND_METADATA } from '../data/brandMetadata';
 import { ThreatItem } from '../types';
@@ -45,8 +46,8 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
   const isApp = threat.platform === 'Google Play' || threat.platform === 'App Store';
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0f2930]/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
-      <div className="bg-white w-full max-w-5xl max-h-[94vh] rounded-2xl shadow-2xl border border-[#c2c7ca] overflow-hidden flex flex-col">
+    <InvestigationBackdrop className="fixed inset-0 z-50 bg-[#0f2930]/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+      <InvestigationPanel className="bg-white w-full max-w-5xl max-h-[94vh] rounded-2xl shadow-2xl border border-[#c2c7ca] overflow-hidden flex flex-col">
         <header className="px-5 sm:px-6 py-4 border-b border-[#eeeeed] bg-gradient-to-r from-[#f9f9f8] to-[#eef6f9] flex items-center justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -54,7 +55,7 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
                 Threat Investigation
               </h2>
               <span className={`px-2 py-0.5 rounded-full border font-['JetBrains_Mono'] text-[10px] font-bold ${riskClasses[threat.riskCategory]}`}>
-                {threat.riskCategory.toUpperCase()} • {threat.riskScore}/100
+                {threat.riskCategory.toUpperCase()} • <AnimatedNumber value={threat.riskScore} />/100
               </span>
               <span className="px-2 py-0.5 rounded-full bg-[#0f2930] text-[#cce7f0] font-['JetBrains_Mono'] text-[10px] font-bold">
                 CASE-{threat.id.slice(0, 10).toUpperCase()}
@@ -154,7 +155,7 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
                 <h3 className="font-['Noto_Serif',serif] font-bold text-[#1a1c1c]">Explainable Detection Signals</h3>
                 <p className="text-xs text-[#515f74] mt-0.5">Every contribution comes from the deterministic prototype engine.</p>
               </div>
-              <span className="font-['JetBrains_Mono'] text-xs font-bold bg-[#0f2930] text-white px-2.5 py-1 rounded">Score {threat.riskScore}/100</span>
+              <span className="font-['JetBrains_Mono'] text-xs font-bold bg-[#0f2930] text-white px-2.5 py-1 rounded">Score <AnimatedNumber value={threat.riskScore} />/100</span>
             </div>
 
             {isApp && (
@@ -202,7 +203,7 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
             )}
           </div>
         </footer>
-      </div>
-    </div>
+      </InvestigationPanel>
+    </InvestigationBackdrop>
   );
 };

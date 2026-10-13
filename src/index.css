@@ -115,3 +115,18 @@ html, body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Small interactions only; preserve all existing Tailwind colors and dimensions. */
+@media (prefers-reduced-motion: no-preference) {
+  main button:not(:disabled), [role="dialog"] button:not(:disabled) {
+    transition: transform 140ms ease-out, background-color 140ms ease-out, border-color 140ms ease-out;
+  }
+  main button:not(:disabled):active, [role="dialog"] button:not(:disabled):active { transform: scale(0.98); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  main button:not(:disabled):hover, [role="dialog"] button:not(:disabled):hover { transform: translateY(-1px); }
+}
+button:focus-visible { outline: 2px solid #2b94d7; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
