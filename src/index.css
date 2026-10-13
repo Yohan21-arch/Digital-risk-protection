@@ -49,10 +49,10 @@
   --color-on-error: #ffffff;
   --color-primary: #001319;
 
-  --font-headline-xl: "Manrope", sans-serif;
-  --font-headline-lg: "Manrope", sans-serif;
-  --font-headline-md: "Manrope", sans-serif;
-  --font-headline-sm: "Manrope", sans-serif;
+  --font-headline-xl: "Noto Serif", serif;
+  --font-headline-lg: "Noto Serif", serif;
+  --font-headline-md: "Noto Serif", serif;
+  --font-headline-sm: "Noto Serif", serif;
   --font-body-lg: "Inter", sans-serif;
   --font-body-md: "Inter", sans-serif;
   --font-body-sm: "Inter", sans-serif;

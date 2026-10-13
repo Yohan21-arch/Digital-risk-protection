@@ -6,6 +6,14 @@ import { CandidateEntity } from '../types';
  * Clearly labeled as demo source data for hackathon evaluation.
  */
 export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
+  {
+    id: 'CAND-NIKE-COMMUNITY', targetBrand: 'Nike', name: 'Nike Football Community',
+    handleOrPkg: '@nike_football_community', platform: 'Instagram', avatarType: 'letter',
+    avatarBg: '#515f74', avatarText: 'NF', audience: '2K Followers', dateDetected: '2026-10-13 00:00 UTC',
+    summary: 'Independent fan community discussing football boots and weekend matches.',
+    details: { publisher: 'Football fans', purpose: 'Community discussion', homographEntropy: 'No manipulation',
+      sha256Hash: '', registrar: 'Meta Platforms Inc.', ipAddress: '', registeredDate: '2026-10-01', mxRecords: 'N/A' },
+  },
   // ==========================================
   // 1. PAYTM (One97 Communications)
   // ==========================================

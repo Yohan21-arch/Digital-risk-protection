@@ -39,11 +39,11 @@ export const RegisterAssetModal: React.FC<RegisterAssetModalProps> = ({
               <span className="material-symbols-outlined text-[20px]">verified_user</span>
             </div>
             <div>
-              <h2 className="font-['Manrope'] text-lg font-bold text-[#1a1c1c]">
+              <h2 className="font-heading-serif text-lg font-bold text-[#1a1c1c]">
                 Register Official Asset
               </h2>
               <p className="font-['JetBrains_Mono'] text-xs text-[#515f74]">
-                Declare Safe Harbor Token for Neural Comparison Models
+                Register an official asset for deterministic identity matching
               </p>
             </div>
           </div>
