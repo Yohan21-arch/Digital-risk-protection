@@ -1,6 +1,8 @@
 import { CandidateEntity } from '../types';
+import { PROTOTYPE_CANDIDATE_DATASET } from '../data/candidateData';
 
 const STORAGE_KEY = 'sentinalbrand.runtimeCandidates';
+const BUILT_IN_IDS = new Set(PROTOTYPE_CANDIDATE_DATASET.map((candidate) => candidate.id));
 
 const ALLOWED_PLATFORMS: CandidateEntity['platform'][] = [
   'X',
@@ -41,6 +43,10 @@ export function normalizeRuntimeCandidate(raw: unknown, index = 0): CandidateEnt
     : {}) as Record<string, unknown>;
 
   const id = asString(item.id) || `LOCAL-${Date.now()}-${index + 1}`;
+  if (BUILT_IN_IDS.has(id)) {
+    throw new Error(`Candidate id "${id}" is reserved by the built-in demo dataset.`);
+  }
+
   const publisher = asString(item.publisher) || asString(details.publisher) || 'Unknown / not supplied';
 
   return {
@@ -115,17 +121,38 @@ export function storeRuntimeCandidates(candidates: CandidateEntity[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(candidates));
 }
 
-export function clearRuntimeCandidates(): void {
-  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEY);
-}
-
-export function mergeCandidateSets(
-  base: CandidateEntity[],
-  incoming: CandidateEntity[]
-): CandidateEntity[] {
+export function mergeCandidateSets(base: CandidateEntity[], incoming: CandidateEntity[]): CandidateEntity[] {
   const byId = new Map<string, CandidateEntity>();
   for (const candidate of base) byId.set(candidate.id, candidate);
   for (const candidate of incoming) byId.set(candidate.id, candidate);
   return Array.from(byId.values());
 }
+
+function syncActiveDataset(runtimeCandidates: CandidateEntity[]): void {
+  const builtInOnly = PROTOTYPE_CANDIDATE_DATASET.filter((candidate) => BUILT_IN_IDS.has(candidate.id));
+  const merged = mergeCandidateSets(builtInOnly, runtimeCandidates);
+  PROTOTYPE_CANDIDATE_DATASET.splice(0, PROTOTYPE_CANDIDATE_DATASET.length, ...merged);
+}
+
+export function hydrateStoredRuntimeCandidates(): CandidateEntity[] {
+  const stored = getStoredRuntimeCandidates();
+  syncActiveDataset(stored);
+  return stored;
+}
+
+export function appendRuntimeCandidates(incoming: CandidateEntity[]): CandidateEntity[] {
+  const current = getStoredRuntimeCandidates();
+  const merged = mergeCandidateSets(current, incoming);
+  storeRuntimeCandidates(merged);
+  syncActiveDataset(merged);
+  return merged;
+}
+
+export function clearRuntimeCandidates(): void {
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  syncActiveDataset([]);
+}
+
+if (typeof window !== 'undefined') hydrateStoredRuntimeCandidates();
