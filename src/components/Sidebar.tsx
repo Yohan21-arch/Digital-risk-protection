@@ -19,8 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems: { label: NavTab; icon: string; count?: number }[] = [
     { label: 'Overview', icon: 'dashboard' },
     { label: 'Brand Search', icon: 'travel_explore' },
-    { label: 'Social Monitoring', icon: 'share' },
-    { label: 'App Monitoring', icon: 'apps' },
+    { label: 'Monitoring', icon: 'monitoring' },
     { label: 'Detection Center', icon: 'radar', count: threatCount },
     { label: 'Verified Assets', icon: 'verified_user' },
     { label: 'Brand Profile', icon: 'corporate_fare' },
@@ -86,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {/* 8 Primary Navigation Tabs */}
+          {/* 7 Primary Navigation Tabs */}
           <nav className="flex flex-col gap-1.5 mt-1">
             {navItems.map((item) => {
               const isActive = currentTab === item.label;
