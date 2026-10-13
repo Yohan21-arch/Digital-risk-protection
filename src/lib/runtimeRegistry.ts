@@ -15,16 +15,28 @@ const brandKey = (brand: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
 
+// Keep immutable built-in references so Reset always returns to the original demo baseline.
+const BASE_BRAND_METADATA: Record<string, BrandMetadataEntry> = Object.fromEntries(
+  Object.entries(BRAND_METADATA).map(([key, value]) => [
+    key,
+    {
+      ...value,
+      domains: [...value.domains],
+      officialPublishers: [...value.officialPublishers],
+      officialPackages: [...value.officialPackages],
+      officialHandles: value.officialHandles.map((item) => ({ ...item })),
+      officialLogo: { ...value.officialLogo },
+    },
+  ])
+);
+
 const cleanList = (items: string[]) =>
   Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
 
 const cleanHandles = (handles: RuntimeBrandProfile['officialHandles']) => {
   const seen = new Set<string>();
   return handles
-    .map((item) => ({
-      platform: item.platform.trim(),
-      handle: item.handle.trim(),
-    }))
+    .map((item) => ({ platform: item.platform.trim(), handle: item.handle.trim() }))
     .filter((item) => item.platform && item.handle)
     .filter((item) => {
       const key = `${item.platform.toLowerCase()}::${item.handle.toLowerCase()}`;
@@ -101,11 +113,22 @@ function genericMetadata(brand: string): BrandMetadataEntry {
   };
 }
 
+export function getBuiltInBrandMetadata(brand: string): BrandMetadataEntry | undefined {
+  return BASE_BRAND_METADATA[brandKey(brand)];
+}
+
 export function getEffectiveBrandMetadata(brand: string): BrandMetadataEntry {
   const key = brandKey(brand);
-  const base = BRAND_METADATA[key] || genericMetadata(brand);
+  const base = BASE_BRAND_METADATA[key] || genericMetadata(brand);
   const stored = getStoredRuntimeProfile(brand);
-  if (!stored) return base;
+  if (!stored) return {
+    ...base,
+    domains: [...base.domains],
+    officialPublishers: [...base.officialPublishers],
+    officialPackages: [...base.officialPackages],
+    officialHandles: base.officialHandles.map((item) => ({ ...item })),
+    officialLogo: { ...base.officialLogo },
+  };
 
   return {
     ...base,
@@ -114,7 +137,30 @@ export function getEffectiveBrandMetadata(brand: string): BrandMetadataEntry {
     officialPublishers: stored.officialPublishers,
     officialPackages: stored.officialPackages,
     officialHandles: stored.officialHandles,
+    officialLogo: { ...base.officialLogo },
   };
+}
+
+/** Apply the browser-local profile to the in-memory registry consumed by Phase 1/2 scoring. */
+export function applyRuntimeBrandProfile(brand: string): BrandMetadataEntry {
+  const key = brandKey(brand);
+  const effective = getEffectiveBrandMetadata(brand);
+  if (key) BRAND_METADATA[key] = effective;
+  return effective;
+}
+
+export function resetRuntimeBrandProfile(brand: string): BrandMetadataEntry {
+  clearRuntimeProfile(brand);
+  const key = brandKey(brand);
+  const base = getEffectiveBrandMetadata(brand);
+  if (key) BRAND_METADATA[key] = base;
+  return base;
+}
+
+export function hydrateStoredRuntimeProfiles(): void {
+  for (const key of Object.keys(BASE_BRAND_METADATA)) {
+    applyRuntimeBrandProfile(key);
+  }
 }
 
 export function runtimeProfileFromMetadata(metadata: BrandMetadataEntry): RuntimeBrandProfile {
