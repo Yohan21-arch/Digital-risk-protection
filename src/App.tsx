@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { AnimatePresence, MotionConfig } from 'motion/react';
+import { ViewTransition } from './components/MotionUI';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ThreatItem,
@@ -248,6 +250,7 @@ export default function App() {
   };
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f9f9f8] text-[#1a1c1c] flex selection:bg-[#d5e3fc] selection:text-[#0d1c2e]">
       {/* 1. PERSISTENT DOCKED SIDE NAVIGATION */}
       <Sidebar
@@ -284,6 +287,7 @@ export default function App() {
 
         {/* MAIN SCROLLABLE CONTENT CANVAS */}
         <main className="flex-1 p-3.5 sm:p-5 lg:p-7 max-w-[1600px] w-full min-w-0 mx-auto">
+          <ViewTransition key={activeSubTab === 'Global Telemetry' && currentTab === 'Brand Search' ? currentTab : activeSubTab || currentTab}>
           {/* SubTab Views (Top Bar Direct Overrides) */}
           {activeSubTab === 'Active Takedowns' ? (
             <ActiveTakedownsView
@@ -404,13 +408,16 @@ export default function App() {
               onTriggerToast={showToast}
             />
           ) : null}
+          </ViewTransition>
         </main>
       </div>
 
       {/* 3. MODALS & INTERACTIVE DRAWERS */}
       {/* Forensic Threat Deep Investigation */}
+      <AnimatePresence>
       {investigatingThreat && (
         <DeepInvestigationModal
+          key={investigatingThreat.id}
           threat={investigatingThreat}
           onClose={() => setInvestigatingThreat(null)}
           onDismiss={handleDismissThreat}
@@ -419,6 +426,8 @@ export default function App() {
           onConfirmTakedown={handleConfirmTakedownFromInvestigation}
         />
       )}
+
+      </AnimatePresence>
 
       {/* Issue Takedown Modal */}
       {isTakedownModalOpen && (
@@ -462,5 +471,6 @@ export default function App() {
       {/* Toast Notification Container */}
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
+    </MotionConfig>
   );
 }

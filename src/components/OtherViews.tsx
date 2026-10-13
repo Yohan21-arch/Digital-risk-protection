@@ -1,3 +1,4 @@
+import { AnimatedNumber } from './MotionUI';
 import React, { useState, useRef, useEffect } from 'react';
 import { ThreatItem, VerifiedAsset, TakedownNotice } from '../types';
 import { BRAND_METADATA } from '../data/brandMetadata';
@@ -68,7 +69,7 @@ export const OverviewView: React.FC<ViewProps> = ({
             Active Incidents
           </span>
           <div className="mt-1.5 text-2xl sm:text-3xl font-bold font-['Manrope'] text-[#1a1c1c] tabular-nums">
-            {threats.length}
+            <AnimatedNumber value={threats.length} />
           </div>
           <div className="mt-1 text-[11px] text-red-600 font-['Inter'] truncate">
             {threats.filter((t) => t.riskCategory === 'Critical').length} Critical • {threats.filter((t) => t.riskCategory === 'High').length} High
@@ -80,7 +81,7 @@ export const OverviewView: React.FC<ViewProps> = ({
             Takedowns Sent
           </span>
           <div className="mt-1.5 text-2xl sm:text-3xl font-bold font-['Manrope'] text-[#1a1c1c] tabular-nums">
-            {takedowns.length}
+            <AnimatedNumber value={takedowns.length} />
           </div>
           <div className="mt-1 text-[11px] text-emerald-700 font-['Inter'] truncate">
             2 Delisted (50%)
@@ -104,7 +105,7 @@ export const OverviewView: React.FC<ViewProps> = ({
             Safe Anchors
           </span>
           <div className="mt-1.5 text-2xl sm:text-3xl font-bold font-['Manrope'] text-[#1a1c1c] tabular-nums">
-            {verifiedAssets.length}
+            <AnimatedNumber value={verifiedAssets.length} />
           </div>
           <div className="mt-1 text-[11px] text-emerald-700 font-['Inter'] truncate">
             100% Intact
@@ -140,7 +141,7 @@ export const OverviewView: React.FC<ViewProps> = ({
                   <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-red-700 truncate max-w-[160px]">{t.handleOrPkg}</td>
                   <td className="py-2.5 px-3">
                     <span className="px-2 py-0.5 rounded font-['JetBrains_Mono'] text-[10px] font-bold bg-red-100 text-red-800">
-                      {t.riskCategory} ({t.riskScore})
+                      {t.riskCategory} (<AnimatedNumber value={t.riskScore} />)
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-right shrink-0">
@@ -375,7 +376,7 @@ export const SocialMonitoringView: React.FC<ViewProps> = ({
                             : 'text-amber-800 bg-amber-100'
                         }`}
                       >
-                        {isOfficial ? 'Trusted' : `Risk ${t.riskScore}/100`}
+                        {isOfficial ? 'Trusted' : <>Risk <AnimatedNumber value={t.riskScore} />/100</>}
                       </span>
                     </div>
                   </div>
@@ -616,7 +617,7 @@ export const AppMonitoringView: React.FC<ViewProps> = ({
                       : 'text-red-700 bg-red-100'
                   }`}
                 >
-                  {isOfficial ? 'Trusted' : `Risk ${t.riskScore}/100`}
+                  {isOfficial ? 'Trusted' : <>Risk <AnimatedNumber value={t.riskScore} />/100</>}
                 </span>
               </div>
 
@@ -783,7 +784,7 @@ export const DetectionCenterView: React.FC<ViewProps> = ({
                     <td className="py-2.5 px-3 text-[#515f74]">{t.platform}</td>
                     <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-red-700 truncate max-w-[140px]">{t.handleOrPkg}</td>
                     <td className="py-2.5 px-3 font-['JetBrains_Mono'] font-bold text-red-700">
-                      {t.riskScore}/100
+                      <AnimatedNumber value={t.riskScore} />/100
                     </td>
                     <td className="py-2.5 px-3 font-['JetBrains_Mono'] text-[11px] text-[#72787a] truncate max-w-[120px]">
                       {t.dateDetected}
