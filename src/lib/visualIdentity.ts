@@ -1,37 +1,34 @@
 /**
  * DETERMINISTIC VISUAL IDENTITY & LOGO SIMILARITY ENGINE
- * 
- * Implements genuine, mathematically deterministic image and vector logo analysis:
- * 1. 64-bit Difference Hash (dHash) / Perceptual Luminance Hash
- * 2. Hamming Distance computation across 64 bits
- * 3. Color Space Distance (Euclidean RGB delta & dominant palette overlap)
- * 4. Structural + Color composite similarity score (0 - 100%)
- * 
- * NO fake AI, NO random numbers, NO hard-coded pseudo-scores.
- * Fully testable in Node.js and interactive in browser HTML5 Canvas.
+ *
+ * Implements browser-side, deterministic image/vector analysis:
+ * 1. 64-bit Difference Hash (dHash)
+ * 2. Hamming Distance
+ * 3. RGB palette distance
+ * 4. Composite similarity score (0-100)
+ *
+ * No neural model, random score, or external image API is used.
  */
 
 export interface VisualProfile {
-  primaryColor: string;     // Hex color (e.g. '#002E6E')
-  secondaryColor: string;   // Hex color (e.g. '#00BAF2')
-  pHash: string;            // 16-character hex representation of 64-bit perceptual hash
-  symbolDescription: string;// Descriptive label of the symbol mark
+  primaryColor: string;
+  secondaryColor: string;
+  pHash: string;
+  symbolDescription: string;
   shape?: 'circle' | 'square' | 'rounded' | 'shield';
-  svgIcon?: string;         // SVG markup or path snippet for deterministic vector rendering
+  svgIcon?: string;
 }
 
 export interface VisualSimilarityResult {
-  visualScore: number;       // Composite score 0 - 100
-  pHashScore: number;        // Structural match 0 - 100
-  colorScore: number;        // Palette match 0 - 100
-  hammingDistance: number;   // 0 - 64 bits
+  status: 'available' | 'unavailable';
+  visualScore: number;
+  pHashScore: number;
+  colorScore: number;
+  hammingDistance: number;
   dominantColorMatch: boolean;
   explanation: string;
 }
 
-/**
- * Parses hex string to RGB tuple [r, g, b]
- */
 export function hexToRgb(hex: string): [number, number, number] {
   const clean = hex.replace('#', '').trim();
   if (clean.length === 3) {
@@ -41,116 +38,88 @@ export function hexToRgb(hex: string): [number, number, number] {
     return [r, g, b];
   }
   const num = parseInt(clean.slice(0, 6), 16) || 0;
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  return [r, g, b];
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
 }
 
-/**
- * Calculates Euclidean distance between two RGB colors (0 to ~441.67)
- * Returns similarity percentage (0 - 100)
- */
 export function colorSimilarity(hexA: string, hexB: string): number {
   if (!hexA || !hexB) return 0;
   if (hexA.toLowerCase() === hexB.toLowerCase()) return 100;
 
   const [r1, g1, b1] = hexToRgb(hexA);
   const [r2, g2, b2] = hexToRgb(hexB);
-
-  // Maximum possible distance is sqrt(255^2 + 255^2 + 255^2) ≈ 441.67
   const distance = Math.sqrt(
     Math.pow(r1 - r2, 2) + Math.pow(g1 - g2, 2) + Math.pow(b1 - b2, 2)
   );
-
   const maxDist = 441.6729559300637;
-  const sim = Math.max(0, 100 - (distance / maxDist) * 100);
-  return Math.round(sim);
+  return Math.round(Math.max(0, 100 - (distance / maxDist) * 100));
 }
 
-/**
- * Counts differing bits (Hamming Distance) between two 16-character hex hashes (64 bits)
- */
 export function hammingDistance64(hashA: string, hashB: string): number {
   const hA = (hashA || '').padEnd(16, '0').slice(0, 16);
   const hB = (hashB || '').padEnd(16, '0').slice(0, 16);
-
   let diff = 0;
-  // Process 4 hex characters (16 bits) at a time
+
   for (let i = 0; i < 16; i += 4) {
     const chunkA = parseInt(hA.slice(i, i + 4), 16) || 0;
     const chunkB = parseInt(hB.slice(i, i + 4), 16) || 0;
     let xor = chunkA ^ chunkB;
-    // Count set bits
     while (xor > 0) {
       diff += xor & 1;
-      xor = xor >>> 1;
+      xor >>>= 1;
     }
   }
-
   return Math.min(64, Math.max(0, diff));
 }
 
-/**
- * Calculates structural similarity based on 64-bit perceptual hash Hamming distance
- */
-export function pHashSimilarity(hashA: string, hashB: string): { pHashScore: number; hammingDist: number } {
-  if (!hashA || !hashB) {
-    return { pHashScore: 0, hammingDist: 64 };
-  }
+export function pHashSimilarity(
+  hashA: string,
+  hashB: string
+): { pHashScore: number; hammingDist: number } {
+  if (!hashA || !hashB) return { pHashScore: 0, hammingDist: 64 };
   if (hashA.toLowerCase() === hashB.toLowerCase()) {
     return { pHashScore: 100, hammingDist: 0 };
   }
-
   const dist = hammingDistance64(hashA, hashB);
-  const score = Math.round((1 - dist / 64) * 100);
-  return { pHashScore: Math.max(0, Math.min(100, score)), hammingDist: dist };
+  return {
+    pHashScore: Math.max(0, Math.min(100, Math.round((1 - dist / 64) * 100))),
+    hammingDist: dist,
+  };
 }
 
-/**
- * Genuine Deterministic Logo Comparison:
- * - 60% weight on structural perceptual hash match (pHash)
- * - 40% weight on primary & secondary color palette match
- */
 export function compareVisualProfiles(
   candidate: VisualProfile | undefined,
   official: VisualProfile | undefined
 ): VisualSimilarityResult {
-  if (!candidate || !official) {
+  if (!candidate || !official || !candidate.pHash || !official.pHash) {
     return {
+      status: 'unavailable',
       visualScore: 0,
       pHashScore: 0,
       colorScore: 0,
       hammingDistance: 64,
       dominantColorMatch: false,
-      explanation: 'No visual identity profile provided for comparison.',
+      explanation: 'Visual signal unavailable. No visual risk points were added.',
     };
   }
 
-  // 1. Structural similarity
   const { pHashScore, hammingDist } = pHashSimilarity(candidate.pHash, official.pHash);
-
-  // 2. Color similarity (primary + secondary)
   const primarySim = colorSimilarity(candidate.primaryColor, official.primaryColor);
   const secondarySim = colorSimilarity(candidate.secondaryColor, official.secondaryColor);
   const colorScore = Math.round(primarySim * 0.7 + secondarySim * 0.3);
   const dominantColorMatch = primarySim >= 80;
+  const visualScore = Math.round(Math.max(0, Math.min(100, 0.6 * pHashScore + 0.4 * colorScore)));
 
-  // 3. Composite score
-  const rawScore = 0.60 * pHashScore + 0.40 * colorScore;
-  const visualScore = Math.round(Math.max(0, Math.min(100, rawScore)));
-
-  // 4. Mathematical explanation
   let explanation = '';
   if (visualScore >= 80) {
-    explanation = `High visual mimicry detected: ${pHashScore}% structural hash alignment (${hammingDist}/64 bit delta) and ${colorScore}% color palette match.`;
+    explanation = `High visual resemblance: ${pHashScore}% structural match (${hammingDist}/64 bit delta) and ${colorScore}% palette match.`;
   } else if (visualScore >= 50) {
     explanation = `Moderate visual resemblance: ${pHashScore}% structural similarity with ${colorScore}% palette correlation.`;
   } else {
-    explanation = `Distinct visual identity: Low structural correlation (${pHashScore}%) and non-matching brand colors.`;
+    explanation = `Low visual resemblance: ${pHashScore}% structural similarity and ${colorScore}% palette match.`;
   }
 
   return {
+    status: 'available',
     visualScore,
     pHashScore,
     colorScore,
@@ -160,17 +129,8 @@ export function compareVisualProfiles(
   };
 }
 
-/**
- * Interactive HTML5 Canvas dHash generator:
- * Computes a standard 64-bit difference hash (dHash) from an 9x8 grayscale raster matrix.
- * Used for live client-side image uploads and canvas inspection.
- */
 export function computeDHashFromCanvas(canvas: HTMLCanvasElement): { pHash: string; primaryColor: string } {
   try {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return { pHash: '0000000000000000', primaryColor: '#515f74' };
-
-    // 1. Create a 9x8 thumbnail for horizontal gradient difference
     const sampleCanvas = document.createElement('canvas');
     sampleCanvas.width = 9;
     sampleCanvas.height = 8;
@@ -178,113 +138,121 @@ export function computeDHashFromCanvas(canvas: HTMLCanvasElement): { pHash: stri
     if (!sCtx) return { pHash: '0000000000000000', primaryColor: '#515f74' };
 
     sCtx.drawImage(canvas, 0, 0, 9, 8);
-    const imgData = sCtx.getImageData(0, 0, 9, 8);
-    const pixels = imgData.data;
+    const pixels = sCtx.getImageData(0, 0, 9, 8).data;
 
-    // Calculate average dominant RGB
-    let totalR = 0, totalG = 0, totalB = 0;
+    let totalR = 0;
+    let totalG = 0;
+    let totalB = 0;
     const count = 9 * 8;
     for (let i = 0; i < pixels.length; i += 4) {
       totalR += pixels[i];
       totalG += pixels[i + 1];
       totalB += pixels[i + 2];
     }
+
     const avgR = Math.round(totalR / count);
     const avgG = Math.round(totalG / count);
     const avgB = Math.round(totalB / count);
-    const primaryColor = `#${avgR.toString(16).padStart(2, '0')}${avgG.toString(16).padStart(2, '0')}${avgB.toString(16).padStart(2, '0')}`;
+    const primaryColor = `#${avgR.toString(16).padStart(2, '0')}${avgG
+      .toString(16)
+      .padStart(2, '0')}${avgB.toString(16).padStart(2, '0')}`;
 
-    // Compute 64-bit dHash: row by row, test if pixel[x] > pixel[x+1]
     let hashBits = '';
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
-        const idxLeft = (y * 9 + x) * 4;
-        const idxRight = (y * 9 + x + 1) * 4;
-        // Grayscale luminance = 0.299R + 0.587G + 0.114B
-        const lumLeft = 0.299 * pixels[idxLeft] + 0.587 * pixels[idxLeft + 1] + 0.114 * pixels[idxLeft + 2];
-        const lumRight = 0.299 * pixels[idxRight] + 0.587 * pixels[idxRight + 1] + 0.114 * pixels[idxRight + 2];
+        const left = (y * 9 + x) * 4;
+        const right = (y * 9 + x + 1) * 4;
+        const lumLeft = 0.299 * pixels[left] + 0.587 * pixels[left + 1] + 0.114 * pixels[left + 2];
+        const lumRight = 0.299 * pixels[right] + 0.587 * pixels[right + 1] + 0.114 * pixels[right + 2];
         hashBits += lumLeft > lumRight ? '1' : '0';
       }
     }
 
-    // Convert 64 bits to 16 hex characters
     let hexHash = '';
     for (let i = 0; i < 64; i += 4) {
-      const nibble = parseInt(hashBits.slice(i, i + 4), 2);
-      hexHash += nibble.toString(16);
+      hexHash += parseInt(hashBits.slice(i, i + 4), 2).toString(16);
     }
-
     return { pHash: hexHash, primaryColor };
   } catch {
     return { pHash: '0000000000000000', primaryColor: '#515f74' };
   }
 }
 
-/**
- * Safely processes a user-uploaded image file locally in the browser:
- * 1. Checks max file size (1 MB) and format (PNG, JPEG, WEBP, SVG)
- * 2. Reads file via FileReader (stays completely local, zero server uploads)
- * 3. Draws to a hidden canvas and computes real 64-bit dHash and average RGB color
- * 4. Returns a deterministic VisualProfile
- */
-export async function computeProfileFromImageFile(file: File): Promise<VisualProfile> {
-  if (file.size > 1024 * 1024) {
-    throw new Error('File exceeds maximum size of 1 MB.');
+function imageElementToProfile(img: HTMLImageElement, description: string, sourceData?: string): VisualProfile {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(9, img.naturalWidth || img.width || 100);
+  canvas.height = Math.max(8, img.naturalHeight || img.height || 100);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Unable to create canvas 2D context.');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const { pHash, primaryColor } = computeDHashFromCanvas(canvas);
+
+  return {
+    primaryColor,
+    secondaryColor: primaryColor,
+    pHash,
+    symbolDescription: description,
+    shape: 'rounded',
+    svgIcon: sourceData,
+  };
+}
+
+export async function computeProfileFromImageSource(
+  src: string,
+  description = 'Demo Candidate Visual'
+): Promise<VisualProfile> {
+  if (typeof Image === 'undefined' || typeof document === 'undefined') {
+    throw new Error('Image analysis is unavailable outside a browser runtime.');
   }
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        resolve(imageElementToProfile(img, description, src));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = () => reject(new Error(`Failed to load visual asset: ${src}`));
+    img.src = src;
+  });
+}
+
+export async function computeProfileFromImageFile(file: File): Promise<VisualProfile> {
+  if (file.size > 1024 * 1024) throw new Error('File exceeds maximum size of 1 MB.');
 
   const validExts = /\.(png|jpe?g|webp|svg)$/i;
   const validMimes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
-  if (!validMimes.includes(file.type) && !file.name.match(validExts)) {
+  if (!validMimes.includes(file.type) && !validExts.test(file.name)) {
     throw new Error('Unsupported format. Please upload PNG, JPEG, WEBP, or SVG.');
   }
 
   return new Promise((resolve, reject) => {
     if (typeof FileReader === 'undefined') {
-      return reject(new Error('FileReader not supported in this runtime.'));
+      reject(new Error('FileReader not supported in this runtime.'));
+      return;
     }
 
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
       if (!dataUrl) {
-        return reject(new Error('Failed to read image data.'));
+        reject(new Error('Failed to read image data.'));
+        return;
       }
 
-      if (typeof Image === 'undefined') {
-        // Fallback for non-browser testing
-        return resolve({
-          primaryColor: '#002E6E',
-          secondaryColor: '#00BAF2',
-          pHash: 'a8b2c4e0f1d3e5a7',
-          symbolDescription: `Uploaded Reference: ${file.name}`,
-          shape: 'rounded',
-          svgIcon: dataUrl,
-        });
+      if (typeof Image === 'undefined' || typeof document === 'undefined') {
+        reject(new Error('Canvas image analysis is unavailable in this runtime.'));
+        return;
       }
 
       const img = new Image();
       img.onload = () => {
         try {
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.max(9, img.naturalWidth || img.width || 100);
-          canvas.height = Math.max(8, img.naturalHeight || img.height || 100);
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            return reject(new Error('Unable to create canvas 2D context.'));
-          }
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const { pHash, primaryColor } = computeDHashFromCanvas(canvas);
-
-          resolve({
-            primaryColor,
-            secondaryColor: primaryColor,
-            pHash,
-            symbolDescription: `Uploaded Reference Logo (${file.name})`,
-            shape: 'rounded',
-            svgIcon: dataUrl,
-          });
-        } catch (err) {
-          reject(err);
+          resolve(imageElementToProfile(img, `Uploaded Reference Logo (${file.name})`, dataUrl));
+        } catch (error) {
+          reject(error);
         }
       };
       img.onerror = () => reject(new Error('Failed to render uploaded image to canvas.'));
@@ -295,32 +263,31 @@ export async function computeProfileFromImageFile(file: File): Promise<VisualPro
   });
 }
 
-/**
- * Persists an uploaded official visual reference in localStorage per brand
- * Key format: sentinalbrand.visualReference.<cleanBrand>
- */
-export function getStoredVisualReference(brandKey: string): (VisualProfile & { source: 'uploaded'; label: string }) | null {
+export function getStoredVisualReference(
+  brandKey: string
+): (VisualProfile & { source: 'uploaded'; label: string }) | null {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(`sentinalbrand.visualReference.${brandKey.toLowerCase()}`);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-export function storeVisualReference(brandKey: string, profile: VisualProfile, label: string = 'Uploaded Reference'): void {
+export function storeVisualReference(
+  brandKey: string,
+  profile: VisualProfile,
+  label = 'Uploaded Reference'
+): void {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
   try {
-    const payload = {
-      ...profile,
-      source: 'uploaded' as const,
-      label,
-    };
-    localStorage.setItem(`sentinalbrand.visualReference.${brandKey.toLowerCase()}`, JSON.stringify(payload));
+    localStorage.setItem(
+      `sentinalbrand.visualReference.${brandKey.toLowerCase()}`,
+      JSON.stringify({ ...profile, source: 'uploaded' as const, label })
+    );
   } catch {
-    // localStorage full or disabled
+    // Storage may be unavailable or full. The in-memory state still works.
   }
 }
 
@@ -329,6 +296,6 @@ export function clearStoredVisualReference(brandKey: string): void {
   try {
     localStorage.removeItem(`sentinalbrand.visualReference.${brandKey.toLowerCase()}`);
   } catch {
-    // ignore
+    // Ignore unavailable storage.
   }
 }

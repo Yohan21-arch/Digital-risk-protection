@@ -21,6 +21,7 @@ export interface LookalikeSignal {
 }
 
 export interface VisualSimilarityAnalysis {
+  status: 'available' | 'unavailable';
   visualScore: number;
   pHashScore: number;
   colorScore: number;
@@ -29,12 +30,16 @@ export interface VisualSimilarityAnalysis {
   explanation: string;
 }
 
+export type RegistryMatchStatus = 'MATCHED' | 'MISMATCH' | 'UNKNOWN';
+
 export interface DetectionAnalysis {
   candidateId: string;
   nameSimilarity: number;
   handleSimilarity: number;
   descriptionSimilarity?: number;
   visualSimilarity?: VisualSimilarityAnalysis;
+  publisherMatch?: RegistryMatchStatus;
+  packageMatch?: RegistryMatchStatus;
   exactBrandTokenFound: boolean;
   matchedTokens: string[];
   suspiciousModifiersFound: string[];
