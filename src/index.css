@@ -60,10 +60,15 @@
   --font-label-md: "JetBrains Mono", monospace;
   --font-label-sm: "JetBrains Mono", monospace;
   --font-slabo: "Slabo 13px", serif;
+  --font-serif: "Noto Serif", serif;
 }
 
 .font-slabo {
   font-family: 'Slabo 13px', serif;
+}
+
+.font-serif, .font-heading-serif {
+  font-family: 'Noto Serif', serif;
 }
 
 *, *::before, *::after {

@@ -10,6 +10,38 @@ export interface ThreatSignal {
   type: 'critical' | 'high' | 'warning' | 'info' | 'safe';
 }
 
+export interface LookalikeSignal {
+  detected: boolean;
+  technique: string;
+  original: string;
+  replacement: string;
+  details?: string;
+}
+
+export interface DetectionAnalysis {
+  candidateId: string;
+  nameSimilarity: number;
+  handleSimilarity: number;
+  exactBrandTokenFound: boolean;
+  matchedTokens: string[];
+  suspiciousModifiersFound: string[];
+  lookalikeSignals: LookalikeSignal[];
+  hasSuspiciousUnicode: boolean;
+  isOfficialAssetMatch: boolean;
+  calculatedScore: number;
+  category: 'Critical' | 'High' | 'Medium' | 'Low' | 'Trusted';
+  breakdown: {
+    nameScore: number;
+    handleScore: number;
+    lookalikeScore: number;
+    wordingScore: number;
+    platformOrPublisherScore: number;
+    unofficialIdentityScore: number;
+  };
+  explanationPoints: string[];
+  whyThisMatters: string;
+}
+
 export interface ThreatItem {
   id: string;
   name: string;
@@ -25,6 +57,36 @@ export interface ThreatItem {
   status: 'active' | 'dismissed' | 'takedown_issued' | 'marked_trusted';
   dateDetected: string;
   explainableSignals: ThreatSignal[];
+  analysis?: DetectionAnalysis;
+  details: {
+    publisher: string;
+    redirectTunnel?: string;
+    purpose: string;
+    homographEntropy: string;
+    sha256Hash: string;
+    registrar: string;
+    ipAddress: string;
+    registeredDate: string;
+    mxRecords: string;
+    evProof?: string;
+  };
+}
+
+export interface CandidateEntity {
+  id: string;
+  targetBrand: string; // e.g. "Paytm", "Amazon", "Nike", "PhonePe", "Microsoft"
+  name: string;
+  handleOrPkg: string;
+  platform: 'X' | 'Google Play' | 'Facebook' | 'Instagram' | 'App Store' | 'Telegram' | 'Web Domain';
+  avatarType: 'letter' | 'icon' | 'badge';
+  avatarBg: string;
+  avatarText: string;
+  audience: string;
+  dateDetected: string;
+  publisher?: string;
+  summary: string;
+  isKnownOfficial?: boolean;
+  officialEntity?: string;
   details: {
     publisher: string;
     redirectTunnel?: string;

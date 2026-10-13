@@ -14,10 +14,11 @@ import {
   RiskLevel,
 } from './types';
 import {
-  INITIAL_THREATS,
   INITIAL_VERIFIED_ASSETS,
   INITIAL_TAKEDOWNS,
 } from './data/mockData';
+import { runBrandDetection } from './lib/detectionEngine';
+import { PROTOTYPE_CANDIDATE_DATASET } from './data/candidateData';
 import { Sidebar } from './components/Sidebar';
 import { TopNavbar } from './components/TopNavbar';
 import { BrandSearchModule } from './components/BrandSearchModule';
@@ -53,10 +54,12 @@ export default function App() {
     return false;
   });
 
-  // Core Data State
-  const [brandQuery, setBrandQuery] = useState('Paytm / One97');
-  const [threats, setThreats] = useState<ThreatItem[]>(INITIAL_THREATS);
+  // Core Data State - Initialized using real deterministic detection engine
+  const [brandQuery, setBrandQuery] = useState('Paytm');
   const [verifiedAssets, setVerifiedAssets] = useState<VerifiedAsset[]>(INITIAL_VERIFIED_ASSETS);
+  const [threats, setThreats] = useState<ThreatItem[]>(() =>
+    runBrandDetection('Paytm', PROTOTYPE_CANDIDATE_DATASET, INITIAL_VERIFIED_ASSETS)
+  );
   const [takedowns, setTakedowns] = useState<TakedownNotice[]>(INITIAL_TAKEDOWNS);
 
   // Filters State
@@ -118,12 +121,13 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Scan Simulation Trigger
-  const handleTriggerScan = () => {
+  // Scan Simulation Trigger (PART L)
+  const handleTriggerScan = (targetBrand?: string) => {
     if (isScanning) return;
+    const query = (targetBrand || brandQuery).trim();
     setIsScanning(true);
     setScanStep(1);
-    showToast(`Initiating comprehensive zero-day DRP scan for "${brandQuery}"...`);
+    showToast(`Initiating deterministic DRP analysis for "${query}"...`);
 
     let current = 1;
     const interval = setInterval(() => {
@@ -132,14 +136,24 @@ export default function App() {
       if (current >= 8) {
         clearInterval(interval);
         setIsScanning(false);
-        showToast(`Scan complete: Discovered 4 Critical and 7 High risk impersonators.`);
+        const results = runBrandDetection(query, PROTOTYPE_CANDIDATE_DATASET, verifiedAssets);
+        setThreats(results);
+        const crit = results.filter((r) => r.riskCategory === 'Critical').length;
+        const high = results.filter((r) => r.riskCategory === 'High').length;
+        if (results.length === 0) {
+          showToast(`Scan complete for "${query}": 0 related candidates in prototype dataset.`);
+        } else {
+          showToast(`Scan complete: Discovered ${crit} Critical and ${high} High risk identities for "${query}".`);
+        }
       }
-    }, 350);
+    }, 120);
   };
 
-  // Brand Query Switcher
+  // Brand Query Switcher (PART F: Real detection on brand change)
   const handleBrandChange = (newBrand: string) => {
     setBrandQuery(newBrand);
+    const results = runBrandDetection(newBrand, PROTOTYPE_CANDIDATE_DATASET, verifiedAssets);
+    setThreats(results);
   };
 
   // Dismiss Threat
@@ -149,30 +163,26 @@ export default function App() {
     showToast('Threat alert dismissed. Entity archived to Low Priority inspection queue.');
   };
 
-  // Mark as Trusted
+  // Mark as Trusted (PART U Test 6: Risk becomes 0, adds to verified assets, exempt from future scans)
   const handleMarkTrusted = (threatId: string) => {
     const threat = threats.find((t) => t.id === threatId);
     if (threat) {
-      setThreats((prev) =>
-        prev.map((t) =>
-          t.id === threatId
-            ? { ...t, riskCategory: 'Trusted', riskScore: 0 }
-            : t
-        )
-      );
-      // Also add to verified assets
-      setVerifiedAssets((prev) => [
-        ...prev,
-        {
-          id: `ASSET-AUTH-${Date.now().toString().slice(-4)}`,
-          name: threat.name,
-          type: threat.platform === 'X' ? 'Social X Handle' : 'Verified Endpoint',
-          identifier: threat.handleOrPkg,
-          legalEntity: 'One97 Communications Verified Exception',
-          status: 'ANCHOR ACTIVE',
-          registeredDate: new Date().toISOString().split('T')[0],
-        },
-      ]);
+      const newVerified: VerifiedAsset = {
+        id: `ASSET-AUTH-${Date.now().toString().slice(-4)}`,
+        name: threat.name,
+        type: threat.platform === 'X' ? 'Social X Handle' : `${threat.platform} Endpoint`,
+        identifier: threat.handleOrPkg,
+        legalEntity: `${brandQuery} Verified Exception`,
+        status: 'ANCHOR ACTIVE',
+        registeredDate: new Date().toISOString().split('T')[0],
+      };
+
+      const updatedVerified = [...verifiedAssets, newVerified];
+      setVerifiedAssets(updatedVerified);
+
+      // Re-run detection against candidate dataset with updated verified assets
+      const updatedThreats = runBrandDetection(brandQuery, PROTOTYPE_CANDIDATE_DATASET, updatedVerified);
+      setThreats(updatedThreats);
     }
     setInvestigatingThreat(null);
     showToast('Asset marked as Verified. Added to Brand Safe Harbor exceptions list.');

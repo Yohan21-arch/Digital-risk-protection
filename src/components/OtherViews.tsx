@@ -32,7 +32,7 @@ export const OverviewView: React.FC<ViewProps> = ({
               EXECUTIVE DEFENSE STATUS: DEFENSIVE STANCE ACTIVE
             </span>
           </div>
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c] tracking-tight">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c] tracking-tight">
             Perimeter Security Overview for {brand}
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5 leading-relaxed">
@@ -164,7 +164,7 @@ export const SocialMonitoringView: React.FC<ViewProps> = ({
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0">
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Social Media Impersonation Radar
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -225,7 +225,7 @@ export const AppMonitoringView: React.FC<ViewProps> = ({
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0">
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Rogue App & APK Store Crawler
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -299,7 +299,7 @@ export const DetectionCenterView: React.FC<ViewProps> = ({
               INCIDENT TRIAGE & REMEDIATION
             </span>
           </div>
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Detection Center & Incident Queue
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -458,7 +458,7 @@ export const VerifiedAssetsView: React.FC<ViewProps> = ({
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0">
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Safe Harbor Verified Asset Registry
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -507,7 +507,7 @@ export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs min-w-0">
-        <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+        <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
           Brand Legal Profile & Organization Verification (KYC)
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -623,7 +623,7 @@ export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs min-w-0">
-        <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+        <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
           Platform Settings & System Health Diagnostics
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -754,7 +754,7 @@ export const ActiveTakedownsView: React.FC<ViewProps> = ({
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0">
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Active Takedowns & Enforcement Operations
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -823,7 +823,7 @@ export const EvidenceLogsView: React.FC<ViewProps> = ({ threats, onTriggerToast,
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0">
-          <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+          <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
             Forensic Evidence Logs & SHA-256 Ledger
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
@@ -871,7 +871,7 @@ export const GlobalTelemetryView: React.FC<ViewProps> = () => {
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs min-w-0">
-        <h1 className="font-['Manrope'] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
+        <h1 className="font-['Noto_Serif',serif] text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1c1c]">
           Global Crawl Telemetry & Endpoint Probes
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
