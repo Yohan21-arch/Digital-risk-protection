@@ -15,7 +15,6 @@ const brandKey = (brand: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
 
-// Keep immutable built-in references so Reset always returns to the original demo baseline.
 const BASE_BRAND_METADATA: Record<string, BrandMetadataEntry> = Object.fromEntries(
   Object.entries(BRAND_METADATA).map(([key, value]) => [
     key,
@@ -121,14 +120,16 @@ export function getEffectiveBrandMetadata(brand: string): BrandMetadataEntry {
   const key = brandKey(brand);
   const base = BASE_BRAND_METADATA[key] || genericMetadata(brand);
   const stored = getStoredRuntimeProfile(brand);
-  if (!stored) return {
-    ...base,
-    domains: [...base.domains],
-    officialPublishers: [...base.officialPublishers],
-    officialPackages: [...base.officialPackages],
-    officialHandles: base.officialHandles.map((item) => ({ ...item })),
-    officialLogo: { ...base.officialLogo },
-  };
+  if (!stored) {
+    return {
+      ...base,
+      domains: [...base.domains],
+      officialPublishers: [...base.officialPublishers],
+      officialPackages: [...base.officialPackages],
+      officialHandles: base.officialHandles.map((item) => ({ ...item })),
+      officialLogo: { ...base.officialLogo },
+    };
+  }
 
   return {
     ...base,
@@ -141,7 +142,6 @@ export function getEffectiveBrandMetadata(brand: string): BrandMetadataEntry {
   };
 }
 
-/** Apply the browser-local profile to the in-memory registry consumed by Phase 1/2 scoring. */
 export function applyRuntimeBrandProfile(brand: string): BrandMetadataEntry {
   const key = brandKey(brand);
   const effective = getEffectiveBrandMetadata(brand);
@@ -172,3 +172,5 @@ export function runtimeProfileFromMetadata(metadata: BrandMetadataEntry): Runtim
     officialHandles: metadata.officialHandles.map((item) => ({ ...item })),
   };
 }
+
+if (typeof window !== 'undefined') hydrateStoredRuntimeProfiles();
