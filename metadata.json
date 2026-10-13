@@ -1,0 +1,6 @@
+{
+  "name": "SentinelBrand - Executive Defense & DRP",
+  "description": "Executive brand defense and digital risk protection platform against rogue domains, app clones, and social impersonation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
