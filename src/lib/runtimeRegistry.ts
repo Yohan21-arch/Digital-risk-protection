@@ -1,5 +1,4 @@
 import { BRAND_METADATA, BrandMetadataEntry } from '../data/brandMetadata';
-import { toAlphaNumeric } from './detectionEngine';
 
 export interface RuntimeBrandProfile {
   domains: string[];
@@ -10,15 +9,14 @@ export interface RuntimeBrandProfile {
 }
 
 const STORAGE_PREFIX = 'sentinalbrand.brandProfile.';
+const brandKey = (brand: string) =>
+  (brand || '')
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 
 const cleanList = (items: string[]) =>
-  Array.from(
-    new Set(
-      items
-        .map((item) => item.trim())
-        .filter(Boolean)
-    )
-  );
+  Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
 
 const cleanHandles = (handles: RuntimeBrandProfile['officialHandles']) => {
   const seen = new Set<string>();
@@ -38,7 +36,11 @@ const cleanHandles = (handles: RuntimeBrandProfile['officialHandles']) => {
 
 export function normalizeRuntimeProfile(profile: RuntimeBrandProfile): RuntimeBrandProfile {
   return {
-    domains: cleanList(profile.domains.map((domain) => domain.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, ''))),
+    domains: cleanList(
+      profile.domains.map((domain) =>
+        domain.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
+      )
+    ),
     appDescription: profile.appDescription.trim(),
     officialPublishers: cleanList(profile.officialPublishers),
     officialPackages: cleanList(profile.officialPackages),
@@ -48,7 +50,7 @@ export function normalizeRuntimeProfile(profile: RuntimeBrandProfile): RuntimeBr
 
 export function getStoredRuntimeProfile(brand: string): RuntimeBrandProfile | null {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
-  const key = toAlphaNumeric(brand);
+  const key = brandKey(brand);
   if (!key) return null;
   try {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
@@ -59,10 +61,13 @@ export function getStoredRuntimeProfile(brand: string): RuntimeBrandProfile | nu
   }
 }
 
-export function storeRuntimeProfile(brand: string, profile: RuntimeBrandProfile): RuntimeBrandProfile {
+export function storeRuntimeProfile(
+  brand: string,
+  profile: RuntimeBrandProfile
+): RuntimeBrandProfile {
   const normalized = normalizeRuntimeProfile(profile);
   if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-    const key = toAlphaNumeric(brand);
+    const key = brandKey(brand);
     if (key) localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(normalized));
   }
   return normalized;
@@ -70,7 +75,7 @@ export function storeRuntimeProfile(brand: string, profile: RuntimeBrandProfile)
 
 export function clearRuntimeProfile(brand: string): void {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
-  const key = toAlphaNumeric(brand);
+  const key = brandKey(brand);
   if (key) localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
 }
 
@@ -97,7 +102,7 @@ function genericMetadata(brand: string): BrandMetadataEntry {
 }
 
 export function getEffectiveBrandMetadata(brand: string): BrandMetadataEntry {
-  const key = toAlphaNumeric(brand);
+  const key = brandKey(brand);
   const base = BRAND_METADATA[key] || genericMetadata(brand);
   const stored = getStoredRuntimeProfile(brand);
   if (!stored) return base;
@@ -110,18 +115,6 @@ export function getEffectiveBrandMetadata(brand: string): BrandMetadataEntry {
     officialPackages: stored.officialPackages,
     officialHandles: stored.officialHandles,
   };
-}
-
-/**
- * Applies the current local runtime profile to the in-memory metadata registry used by
- * the existing synchronous detection engine. This keeps Phase 1/2 scoring intact while
- * allowing the Phase 3 editor to become the source of truth for official identifiers.
- */
-export function applyRuntimeBrandProfile(brand: string): BrandMetadataEntry {
-  const key = toAlphaNumeric(brand);
-  const effective = getEffectiveBrandMetadata(brand);
-  if (key) BRAND_METADATA[key] = effective;
-  return effective;
 }
 
 export function runtimeProfileFromMetadata(metadata: BrandMetadataEntry): RuntimeBrandProfile {
