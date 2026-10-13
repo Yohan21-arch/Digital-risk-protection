@@ -778,6 +778,7 @@ export function evaluateCandidate(
     explainableSignals,
     analysis,
     visualProfile: candidate.visualProfile,
+    visual: candidate.visual,
     details: {
       ...candidate.details,
       homographEntropy:

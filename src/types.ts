@@ -73,6 +73,11 @@ export interface ThreatItem {
   explainableSignals: ThreatSignal[];
   analysis?: DetectionAnalysis;
   visualProfile?: VisualProfile;
+  visual?: {
+    imageSrc?: string;
+    source: 'demo' | 'uploaded';
+    label?: string;
+  };
   details: {
     publisher: string;
     redirectTunnel?: string;
@@ -103,6 +108,11 @@ export interface CandidateEntity {
   isKnownOfficial?: boolean;
   officialEntity?: string;
   visualProfile?: VisualProfile;
+  visual?: {
+    imageSrc?: string;
+    source: 'demo' | 'uploaded';
+    label?: string;
+  };
   details: {
     publisher: string;
     redirectTunnel?: string;

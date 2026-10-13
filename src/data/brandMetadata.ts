@@ -11,6 +11,7 @@ export interface BrandMetadataEntry {
     trademarkNumber: string;
     vectorSvg: string;
     description: string;
+    imageSrc?: string;
   };
 }
 
@@ -35,6 +36,7 @@ export const BRAND_METADATA: Record<string, BrandMetadataEntry> = {
       symbolDescription: 'Paytm Navy Blue & Cyan dual-tone block typography',
       shape: 'rounded',
       description: 'Registered sovereign payments trademark of One97 Communications Ltd.',
+      imageSrc: '/demo-logos/paytm-official.svg',
       vectorSvg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="20" fill="#002E6E"/><path d="M22 68V32h14c9 0 14 5 14 12s-5 12-14 12h-6v12H22zm8-18h6c4 0 6-2 6-6s-2-6-6-6h-6v12z" fill="#FFFFFF"/><path d="M52 46h10v22h8V46h10v-6H52v6z" fill="#00BAF2"/></svg>`,
     },
   },
@@ -56,6 +58,7 @@ export const BRAND_METADATA: Record<string, BrandMetadataEntry> = {
       symbolDescription: 'Amazon curved smile arrow connecting A to Z',
       shape: 'rounded',
       description: 'Authorized trademark of Amazon Technologies, Inc.',
+      imageSrc: '/demo-logos/amazon-official.svg',
       vectorSvg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="20" fill="#131921"/><path d="M25 62c15 10 35 10 50 0-3-2-8-4-8-4s6 1 11-1c-2 6-6 10-6 10-2-2-5-4-5-4-13 8-30 8-42-1z" fill="#FF9900"/><path d="M38 35h10v20H38zM52 30h10v25H52z" fill="#FFFFFF"/></svg>`,
     },
   },
@@ -77,6 +80,7 @@ export const BRAND_METADATA: Record<string, BrandMetadataEntry> = {
       symbolDescription: 'Nike iconic dynamic checkmark swoosh',
       shape: 'rounded',
       description: 'Official registered trademark of Nike, Inc.',
+      imageSrc: '/demo-logos/nike-official.svg',
       vectorSvg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="20" fill="#111111"/><path d="M20 54c12 10 24 16 34 16 22 0 34-18 34-36 0-3-1-5-2-5-2 0-8 8-18 16-14 11-30 13-48 9z" fill="#FFFFFF"/></svg>`,
     },
   },
@@ -98,6 +102,7 @@ export const BRAND_METADATA: Record<string, BrandMetadataEntry> = {
       symbolDescription: 'PhonePe purple rounded badge with stylized devanagari Pe glyph',
       shape: 'circle',
       description: 'Registered payments emblem of PhonePe Private Limited.',
+      imageSrc: '/demo-logos/phonepe-official.svg',
       vectorSvg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="48" fill="#5F259F"/><rect x="26" y="24" width="48" height="8" rx="4" fill="#FFFFFF"/><path d="M38 32v34c0 6 5 10 12 10s12-4 12-10V32h-8v32c0 2-2 4-4 4s-4-2-4-4V32h-8z" fill="#FFFFFF"/><circle cx="50" cy="50" r="4" fill="#00D285"/></svg>`,
     },
   },
@@ -119,6 +124,7 @@ export const BRAND_METADATA: Record<string, BrandMetadataEntry> = {
       symbolDescription: 'Microsoft four-color red, green, blue, yellow square tiles',
       shape: 'rounded',
       description: 'Authorized corporate trademark of Microsoft Corporation.',
+      imageSrc: '/demo-logos/microsoft-official.svg',
       vectorSvg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="20" fill="#1F1F1F"/><rect x="24" y="24" width="22" height="22" fill="#F25022"/><rect x="54" y="24" width="22" height="22" fill="#7FBA00"/><rect x="24" y="54" width="22" height="22" fill="#00A4EF"/><rect x="54" y="54" width="22" height="22" fill="#FFB900"/></svg>`,
     },
   },

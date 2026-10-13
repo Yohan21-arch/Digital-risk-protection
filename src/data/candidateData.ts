@@ -61,6 +61,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       symbolDescription: 'Paytm Official Wordmark & Shield',
       shape: 'rounded',
     },
+    visual: {
+      imageSrc: '/demo-logos/paytm-official.svg',
+      source: 'demo',
+      label: 'Paytm Official Vector Asset',
+    },
     details: {
       publisher: 'One97 Communications Ltd.',
       purpose: 'Authentic Corporate Account',
@@ -90,6 +95,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       pHash: 'a8b2c4e0f1d3e5a6', // 1 bit diff from authentic -> 98% pHash match
       symbolDescription: 'Cloned Paytm cyan/navy emblem with overlaid support headset',
       shape: 'circle',
+    },
+    visual: {
+      imageSrc: '/demo-logos/paytm-lookalike.svg',
+      source: 'demo',
+      label: 'Paytm Support Lookalike Logo',
     },
     details: {
       publisher: 'Unknown Adversary (Hosting in Seychelles)',
@@ -315,6 +325,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       symbolDescription: 'Amazon Smile Wordmark',
       shape: 'rounded',
     },
+    visual: {
+      imageSrc: '/demo-logos/amazon-official.svg',
+      source: 'demo',
+      label: 'Amazon Official Smile Asset',
+    },
     details: {
       publisher: 'Amazon Technologies, Inc.',
       purpose: 'Official Verified Brand Anchor',
@@ -344,6 +359,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       pHash: 'c3d4e5f6a1b2c3d3',
       symbolDescription: 'Exact replica of Amazon smile arrow with modified support banner',
       shape: 'circle',
+    },
+    visual: {
+      imageSrc: '/demo-logos/amazon-lookalike.svg',
+      source: 'demo',
+      label: 'Amaz0n Prime Deals Lookalike Logo',
     },
     details: {
       publisher: 'Rogue Helpdesk Operative',
@@ -539,6 +559,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       symbolDescription: 'Nike Iconic Swoosh',
       shape: 'rounded',
     },
+    visual: {
+      imageSrc: '/demo-logos/nike-official.svg',
+      source: 'demo',
+      label: 'Nike Official Swoosh Asset',
+    },
     details: {
       publisher: 'Nike, Inc.',
       purpose: 'Official Global Footwear Brand Anchor',
@@ -568,6 +593,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       pHash: 'f0e1d2c3b4a59686',
       symbolDescription: 'Direct copy of Nike Swoosh on black circle background',
       shape: 'circle',
+    },
+    visual: {
+      imageSrc: '/demo-logos/nike-lookalike.svg',
+      source: 'demo',
+      label: 'Nike Air Jordan Discount Lookalike Logo',
     },
     details: {
       publisher: 'Counterfeit Retail Syndicate',
@@ -732,6 +762,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       symbolDescription: 'PhonePe Devanagari Pe Emblem',
       shape: 'circle',
     },
+    visual: {
+      imageSrc: '/demo-logos/phonepe-official.svg',
+      source: 'demo',
+      label: 'PhonePe Official Emblem Asset',
+    },
     details: {
       publisher: 'PhonePe Private Limited',
       purpose: 'Official Digital Payments Anchor',
@@ -761,6 +796,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       pHash: 'e4f5a6b7c8d9e0f0',
       symbolDescription: 'Cloned PhonePe purple circular badge with checkmark stamp',
       shape: 'circle',
+    },
+    visual: {
+      imageSrc: '/demo-logos/phonepe-lookalike.svg',
+      source: 'demo',
+      label: 'PhonePe Instant Cashback Lookalike Logo',
     },
     details: {
       publisher: 'UPI Phishing Syndicate',
@@ -925,6 +965,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       symbolDescription: 'Microsoft Four-Color Quadrant Tile',
       shape: 'rounded',
     },
+    visual: {
+      imageSrc: '/demo-logos/microsoft-official.svg',
+      source: 'demo',
+      label: 'Microsoft Official Quadrant Asset',
+    },
     details: {
       publisher: 'Microsoft Corporation',
       purpose: 'Official Global Enterprise Technology Anchor',
@@ -954,6 +999,11 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       pHash: 'd1c2b3a4f5e6d7c9',
       symbolDescription: 'Identical 4-color Microsoft logo with support text banner',
       shape: 'circle',
+    },
+    visual: {
+      imageSrc: '/demo-logos/microsoft-lookalike.svg',
+      source: 'demo',
+      label: 'Micros0ft Support Team Lookalike Logo',
     },
     details: {
       publisher: 'Enterprise Phishing Campaign',

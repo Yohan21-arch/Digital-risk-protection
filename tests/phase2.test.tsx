@@ -175,3 +175,44 @@ test('Phase 2 - 7: Deep Investigation Modal shows deterministic visual logo comp
   assert.ok(modalHtml.includes('Deterministic dHash &amp; RGB delta') || modalHtml.includes('Deterministic dHash & RGB delta'));
   assert.ok(modalHtml.includes('pHash structural match:'));
 });
+
+test('Phase 2 - 8: Local official logo upload, SVG pipeline, and reference section', async () => {
+  const paytmThreats = runBrandDetection('Paytm', candidates, assets);
+  const profileHtml = renderToStaticMarkup(
+    <BrandProfileView
+      threats={paytmThreats}
+      verifiedAssets={assets}
+      takedowns={[]}
+      brand="Paytm"
+      onInvestigate={noop}
+      onOpenTakedown={noop}
+      onTriggerToast={noop}
+    />
+  );
+
+  // 1. Verify OFFICIAL VISUAL REFERENCE section and upload button
+  assert.ok(profileHtml.includes('OFFICIAL VISUAL REFERENCE'));
+  assert.ok(profileHtml.includes('Local Prototype Reference'));
+  assert.ok(profileHtml.includes('Upload Reference Logo'));
+
+  // 2. Verify visual demo SVG pipeline across all 5 major brands
+  for (const b of ['Paytm', 'Amazon', 'Nike', 'PhonePe', 'Microsoft']) {
+    const brandCandidates = candidates.filter((c) => c.targetBrand.toLowerCase() === b.toLowerCase());
+    const hasVisual = brandCandidates.some((c) => c.visual && c.visual.imageSrc?.startsWith('/demo-logos/'));
+    assert.ok(hasVisual, `Expected at least one candidate with /demo-logos/ asset for ${b}`);
+  }
+
+  // 3. Verify file validation in computeProfileFromImageFile
+  const { computeProfileFromImageFile } = await import('../src/lib/visualIdentity');
+  const oversizedFile = { name: 'huge.png', type: 'image/png', size: 2 * 1024 * 1024 } as File;
+  await assert.rejects(
+    () => computeProfileFromImageFile(oversizedFile),
+    /File exceeds maximum size of 1 MB/
+  );
+
+  const invalidTypeFile = { name: 'doc.pdf', type: 'application/pdf', size: 500 } as File;
+  await assert.rejects(
+    () => computeProfileFromImageFile(invalidTypeFile),
+    /Unsupported format/
+  );
+});

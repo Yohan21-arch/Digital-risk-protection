@@ -1,10 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ThreatItem, VerifiedAsset, TakedownNotice } from '../types';
 import { BRAND_METADATA } from '../data/brandMetadata';
 import { toAlphaNumeric } from '../lib/detectionEngine';
 import {
   compareVisualProfiles,
   computeDHashFromCanvas,
+  computeProfileFromImageFile,
+  getStoredVisualReference,
+  storeVisualReference,
+  clearStoredVisualReference,
   VisualProfile,
 } from '../lib/visualIdentity';
 
@@ -906,12 +910,28 @@ export const VerifiedAssetsView: React.FC<ViewProps> = ({
 export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTriggerToast }) => {
   const cleanBrand = toAlphaNumeric(brand);
   const metadata = BRAND_METADATA[cleanBrand];
-  const officialLogo = metadata?.officialLogo;
+  const demoOfficialLogo = metadata?.officialLogo;
+
+  // Local uploaded official reference state persisted in localStorage
+  const [uploadedReference, setUploadedReference] = useState<(VisualProfile & { source: 'uploaded'; label: string }) | null>(() => {
+    return getStoredVisualReference(cleanBrand);
+  });
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync uploaded reference if brand changes
+  useEffect(() => {
+    setUploadedReference(getStoredVisualReference(cleanBrand));
+    setUploadError(null);
+  }, [cleanBrand]);
+
+  const activeOfficialLogo: VisualProfile | undefined = uploadedReference || demoOfficialLogo;
 
   // State for interactive logo matcher workbench
   const [testCandidateId, setTestCandidateId] = useState<string>('');
   const [customPrimaryColor, setCustomPrimaryColor] = useState<string>('#ba1a1a');
-  const [customHash, setCustomHash] = useState<string>(officialLogo?.pHash || 'a8b2c4e0f1d3e5a7');
+  const [customHash, setCustomHash] = useState<string>(activeOfficialLogo?.pHash || 'a8b2c4e0f1d3e5a7');
 
   const selectedCandidate = threats.find((t) => t.id === testCandidateId);
   const testProfile: VisualProfile = selectedCandidate?.visualProfile || {
@@ -921,7 +941,42 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
     symbolDescription: selectedCandidate?.name || 'Custom Tested Vector Artwork',
   };
 
-  const comparison = officialLogo ? compareVisualProfiles(testProfile, officialLogo) : null;
+  const comparison = activeOfficialLogo ? compareVisualProfiles(testProfile, activeOfficialLogo) : null;
+
+  // Handle local file upload (zero server upload)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const profile = await computeProfileFromImageFile(file);
+      storeVisualReference(cleanBrand, profile, file.name);
+      setUploadedReference({
+        ...profile,
+        source: 'uploaded',
+        label: file.name,
+      });
+      onTriggerToast(`Processed uploaded official reference for ${brand} locally (${profile.pHash.slice(0, 8)}...).`);
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to process uploaded image.';
+      setUploadError(msg);
+      onTriggerToast(msg);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleResetToDemo = () => {
+    clearStoredVisualReference(cleanBrand);
+    setUploadedReference(null);
+    setUploadError(null);
+    onTriggerToast(`Restored built-in demo baseline reference for ${brand}.`);
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0">
@@ -956,7 +1011,7 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
               </div>
               <span className="font-['JetBrains_Mono'] text-xs text-[#779199]">
-                Legal Entity DRP #{officialLogo?.trademarkNumber || 'TM-4892019'} • KYC Tier-3 Verified
+                Legal Entity DRP #{demoOfficialLogo?.trademarkNumber || 'TM-4892019'} • KYC Tier-3 Verified
               </span>
             </div>
           </div>
@@ -972,6 +1027,117 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
           </div>
           <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
             <div className="bg-[#2b94d7] h-full rounded-full transition-all duration-500" style={{ width: '100%' }}></div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION: OFFICIAL VISUAL REFERENCE (Local Browser Pipeline) */}
+      <div className="bg-white border border-[#c2c7ca]/70 rounded-xl p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eeeeed]">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 rounded font-['JetBrains_Mono'] text-[10px] font-bold bg-[#cce5ff] text-[#002841]">
+                OFFICIAL VISUAL REFERENCE
+              </span>
+              {uploadedReference ? (
+                <span className="px-2 py-0.5 rounded font-['JetBrains_Mono'] text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                  Uploaded Official Reference
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded font-['JetBrains_Mono'] text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  Local Prototype Reference
+                </span>
+              )}
+            </div>
+            <h2 className="font-['Noto_Serif',serif] text-base sm:text-lg font-bold text-[#1a1c1c]">
+              Official Visual Identity Benchmark for {brand}
+            </h2>
+            <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
+              The canonical image and 64-bit dHash baseline against which all candidate icons and avatars are measured.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="upload-reference-logo-input"
+            />
+            <label
+              htmlFor="upload-reference-logo-input"
+              className="px-3.5 py-2 bg-[#0f2930] hover:bg-[#133942] text-white rounded-lg text-xs font-['Manrope'] font-semibold cursor-pointer shadow-xs flex items-center gap-1.5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#2b94d7]">upload_file</span>
+              <span>{isUploading ? 'Computing dHash...' : 'Upload Reference Logo'}</span>
+            </label>
+
+            {uploadedReference && (
+              <button
+                onClick={handleResetToDemo}
+                className="px-3 py-2 bg-[#f3f4f3] hover:bg-[#e6e8e7] text-[#515f74] hover:text-[#1a1c1c] rounded-lg text-xs font-['Manrope'] font-semibold cursor-pointer transition-colors flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[15px]">restart_alt</span>
+                <span>Reset to Demo Reference</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {uploadError && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px]">error</span>
+            <span>{uploadError}</span>
+          </div>
+        )}
+
+        {/* Visual Reference Spec Card */}
+        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 p-4 rounded-xl bg-[#f9f9f8] border border-[#eeeeed] items-center">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center p-2 shadow-xs border border-white/60 shrink-0 overflow-hidden"
+               style={{ backgroundColor: activeOfficialLogo?.primaryColor || '#002E6E' }}>
+            {uploadedReference?.svgIcon ? (
+              <img src={uploadedReference.svgIcon} alt="Uploaded Reference" className="w-full h-full object-contain" />
+            ) : demoOfficialLogo?.imageSrc ? (
+              <img src={demoOfficialLogo.imageSrc} alt={demoOfficialLogo.name} className="w-full h-full object-contain" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: demoOfficialLogo?.vectorSvg || '' }} />
+            )}
+          </div>
+
+          <div className="space-y-1.5 min-w-0 font-['Inter'] text-xs">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-sm sm:text-base text-[#1a1c1c]">
+                {uploadedReference ? uploadedReference.symbolDescription : demoOfficialLogo?.name}
+              </h3>
+              <span className="font-['JetBrains_Mono'] text-[11px] text-[#515f74]">
+                {uploadedReference ? 'Source: Local Browser Upload' : `TM: ${demoOfficialLogo?.trademarkNumber}`}
+              </span>
+            </div>
+
+            <p className="text-xs text-[#515f74]">
+              {uploadedReference
+                ? 'Processed strictly in-memory using HTML5 Canvas difference hashing. File never leaves your machine.'
+                : demoOfficialLogo?.description}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#72787a]">Primary Color:</span>
+                <span className="w-3 h-3 rounded-full border border-[#c2c7ca]" style={{ backgroundColor: activeOfficialLogo?.primaryColor }} />
+                <span className="font-['JetBrains_Mono'] font-bold text-[#1a1c1c]">{activeOfficialLogo?.primaryColor}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#72787a]">64-bit dHash:</span>
+                <span className="font-['JetBrains_Mono'] text-emerald-800 font-bold bg-white px-1.5 py-0.5 rounded border border-[#c2c7ca]/50">
+                  {activeOfficialLogo?.pHash}
+                </span>
+              </div>
+              <div className="text-[#72787a]">
+                Accepted Formats: PNG, JPEG, WEBP, SVG (&le; 1 MB)
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -992,16 +1158,27 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
 
           <div className="p-4 bg-[#f9f9f8] rounded-xl border border-[#eeeeed] flex items-center gap-4">
             <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center p-2 shadow-xs shrink-0"
-              style={{ backgroundColor: officialLogo?.primaryColor || '#002E6E' }}
-              dangerouslySetInnerHTML={{ __html: officialLogo?.vectorSvg || '' }}
-            />
+              className="w-16 h-16 rounded-xl flex items-center justify-center p-2 shadow-xs shrink-0 overflow-hidden"
+              style={{ backgroundColor: activeOfficialLogo?.primaryColor || '#002E6E' }}
+            >
+              {uploadedReference?.svgIcon ? (
+                <img src={uploadedReference.svgIcon} alt="Uploaded Logo" className="w-full h-full object-contain" />
+              ) : demoOfficialLogo?.imageSrc ? (
+                <img src={demoOfficialLogo.imageSrc} alt={demoOfficialLogo.name} className="w-full h-full object-contain" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: demoOfficialLogo?.vectorSvg || '' }} />
+              )}
+            </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-sm text-[#1a1c1c] truncate">{officialLogo?.name}</h3>
+              <h3 className="font-bold text-sm text-[#1a1c1c] truncate">
+                {uploadedReference ? uploadedReference.symbolDescription : demoOfficialLogo?.name}
+              </h3>
               <span className="font-['JetBrains_Mono'] text-xs text-[#515f74] block mt-0.5 truncate">
-                TM: {officialLogo?.trademarkNumber}
+                TM: {demoOfficialLogo?.trademarkNumber || 'TM-LOCAL-CUSTOM'}
               </span>
-              <p className="text-[11px] text-[#72787a] mt-1">{officialLogo?.description}</p>
+              <p className="text-[11px] text-[#72787a] mt-1 truncate">
+                {uploadedReference ? 'Custom Local Browser Reference' : demoOfficialLogo?.description}
+              </p>
             </div>
           </div>
 
@@ -1009,20 +1186,20 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
             <div className="flex justify-between py-1 border-b border-[#eeeeed]">
               <span>Primary Brand Color:</span>
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded border border-[#c2c7ca]" style={{ backgroundColor: officialLogo?.primaryColor }} />
-                <span className="font-['JetBrains_Mono'] font-bold text-[#1a1c1c]">{officialLogo?.primaryColor}</span>
+                <span className="w-3.5 h-3.5 rounded border border-[#c2c7ca]" style={{ backgroundColor: activeOfficialLogo?.primaryColor }} />
+                <span className="font-['JetBrains_Mono'] font-bold text-[#1a1c1c]">{activeOfficialLogo?.primaryColor}</span>
               </div>
             </div>
             <div className="flex justify-between py-1 border-b border-[#eeeeed]">
               <span>Secondary Accent Color:</span>
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded border border-[#c2c7ca]" style={{ backgroundColor: officialLogo?.secondaryColor }} />
-                <span className="font-['JetBrains_Mono'] font-bold text-[#1a1c1c]">{officialLogo?.secondaryColor}</span>
+                <span className="w-3.5 h-3.5 rounded border border-[#c2c7ca]" style={{ backgroundColor: activeOfficialLogo?.secondaryColor }} />
+                <span className="font-['JetBrains_Mono'] font-bold text-[#1a1c1c]">{activeOfficialLogo?.secondaryColor}</span>
               </div>
             </div>
             <div className="flex justify-between py-1 border-b border-[#eeeeed]">
               <span>64-bit Perceptual Hash (dHash):</span>
-              <span className="font-['JetBrains_Mono'] text-emerald-800 font-bold">{officialLogo?.pHash}</span>
+              <span className="font-['JetBrains_Mono'] text-emerald-800 font-bold">{activeOfficialLogo?.pHash}</span>
             </div>
             <div className="flex justify-between py-1">
               <span>Mathematical Metric:</span>
@@ -1044,7 +1221,7 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
           </div>
 
           <p className="text-[#515f74] leading-relaxed">
-            Test any monitored candidate or modify color profiles to compute deterministic structural similarity against the official brand logo.
+            Test any monitored candidate or modify color profiles to compute deterministic structural similarity against the active official brand reference.
           </p>
 
           <div className="space-y-3">
@@ -1105,7 +1282,7 @@ export const BrandProfileView: React.FC<ViewProps> = ({ brand, threats, onTrigge
             )}
 
             <button
-              onClick={() => onTriggerToast('Visual anchor benchmark recalculated.')}
+              onClick={() => onTriggerToast('Visual anchor benchmark recalculated against active reference.')}
               className="w-full py-2 bg-[#0f2930] hover:bg-[#133942] text-white rounded-lg text-xs font-semibold cursor-pointer font-['Manrope']"
             >
               Re-evaluate Visual Baseline
