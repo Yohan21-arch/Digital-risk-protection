@@ -64,8 +64,10 @@ export function normalizeRuntimeCandidate(raw: unknown, index = 0): CandidateEnt
     dateDetected: asString(item.dateDetected, new Date().toISOString().split('T')[0]),
     publisher,
     summary: asString(item.summary, 'Locally imported prototype candidate.'),
-    isKnownOfficial: item.isKnownOfficial === true,
-    officialEntity: asString(item.officialEntity) || undefined,
+    // Imported monitoring candidates can never self-assert Trusted status. Official
+    // exceptions must come from the trusted asset/brand registry workflow instead.
+    isKnownOfficial: false,
+    officialEntity: undefined,
     visualProfile:
       item.visualProfile && typeof item.visualProfile === 'object'
         ? (item.visualProfile as CandidateEntity['visualProfile'])
