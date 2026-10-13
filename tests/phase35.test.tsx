@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { BUILT_IN_BRANDS } from '../src/data/brandCatalog';
 import { PROTOTYPE_CANDIDATE_DATASET } from '../src/data/candidateData';
+import { EXPANDED_PROTOTYPE_CANDIDATES } from '../src/data/expandedCandidates';
 import { PHASE35_SUPPLEMENTAL_CANDIDATES } from '../src/data/phase35SupplementalCandidates';
 import { BRAND_METADATA } from '../src/data/brandMetadata';
 import { runBrandDetection } from '../src/lib/detectionEngine';
@@ -72,9 +73,8 @@ test('Phase 3.5 - 7: candidate IDs are unique', () => {
 });
 
 test('Phase 3.5 - 8: expanded suspicious web-domain scenarios use reserved test domains', () => {
-  const newBrandSet = new Set(BUILT_IN_BRANDS.slice(5));
-  const webCandidates = combined.filter(
-    (candidate) => candidate.platform === 'Web Domain' && newBrandSet.has(candidate.targetBrand)
+  const webCandidates = EXPANDED_PROTOTYPE_CANDIDATES.filter(
+    (candidate) => candidate.platform === 'Web Domain'
   );
   assert.ok(webCandidates.length >= 15);
   for (const candidate of webCandidates) {
