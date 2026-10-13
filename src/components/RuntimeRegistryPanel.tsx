@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { BRAND_METADATA } from '../data/brandMetadata';
 import { toAlphaNumeric } from '../lib/detectionEngine';
 import {
-  clearRuntimeProfile,
+  applyRuntimeBrandProfile,
   getEffectiveBrandMetadata,
+  resetRuntimeBrandProfile,
   RuntimeBrandProfile,
   runtimeProfileFromMetadata,
   storeRuntimeProfile,
@@ -67,12 +68,13 @@ export const RuntimeRegistryPanel: React.FC<RuntimeRegistryPanelProps> = ({
       officialHandles: parsedHandles,
     };
     storeRuntimeProfile(brand, profile);
+    applyRuntimeBrandProfile(brand);
     onSaved?.();
     onToast(`Saved local official-asset registry for ${brand}. Future scans will use these identifiers.`);
   };
 
   const reset = () => {
-    clearRuntimeProfile(brand);
+    resetRuntimeBrandProfile(brand);
     reload();
     onSaved?.();
     onToast(
