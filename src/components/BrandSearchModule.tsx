@@ -661,12 +661,22 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                                 ? 'tag'
                                 : item.platform === 'Google Play'
                                 ? 'android'
+                                : item.platform === 'App Store'
+                                ? 'store'
                                 : item.platform === 'Web Domain'
                                 ? 'language'
                                 : 'share'}
                             </span>
                             <span>{item.platform}</span>
                           </span>
+
+                          {/* Deterministic Visual Logo Match Chip */}
+                          {item.analysis?.visualSimilarity && item.analysis.visualSimilarity.visualScore >= 75 && !isTrusted && (
+                            <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 font-['JetBrains_Mono'] text-[10px] font-bold shrink-0 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px] text-amber-700">image</span>
+                              <span>{item.analysis.visualSimilarity.visualScore}% Logo Match</span>
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2 text-[#515f74] text-xs font-['Inter'] mt-1 flex-wrap">

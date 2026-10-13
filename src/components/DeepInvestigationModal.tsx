@@ -334,6 +334,21 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
             {analysis?.descriptionSimilarity !== undefined && (
               <p className="text-xs font-['Inter'] text-[#515f74] mb-3">App description similarity: <strong>{analysis.descriptionSimilarity}%</strong> (token overlap with official app description; below 20% adds no points).</p>
             )}
+
+            {analysis?.visualSimilarity !== undefined && (
+              <div className="mb-3 p-2.5 rounded-lg bg-[#eef6f9] border border-[#c2c7ca]/40 text-xs font-['Inter'] text-[#0f2930] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span className="font-semibold text-[#004b73]">Visual Logo Similarity:</span>{' '}
+                  <strong>{analysis.visualSimilarity.visualScore}%</strong>{' '}
+                  <span className="text-[#515f74]">
+                    (pHash structural match: {analysis.visualSimilarity.pHashScore}%, Hamming delta: {analysis.visualSimilarity.hammingDistance}/64 bits, palette match: {analysis.visualSimilarity.colorScore}%)
+                  </span>
+                </div>
+                <span className="font-['JetBrains_Mono'] text-[10px] bg-white px-2 py-0.5 rounded border border-[#c2c7ca]/50 text-[#0f2930] shrink-0 font-medium">
+                  Deterministic dHash & RGB delta
+                </span>
+              </div>
+            )}
             {/* Algorithm Signal Contribution Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {threat.explainableSignals.map((sig, idx) => {

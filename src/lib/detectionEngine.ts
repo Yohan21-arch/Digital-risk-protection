@@ -1,4 +1,5 @@
 import { BRAND_METADATA } from '../data/brandMetadata';
+import { compareVisualProfiles } from './visualIdentity';
 import {
   CandidateEntity,
   DetectionAnalysis,
@@ -505,6 +506,11 @@ export function calculateRisk(
   const metadata = BRAND_METADATA[toAlphaNumeric(cleanBrand)];
   const descriptionSimilarity = isMobileApp ? textSimilarity(candidate.summary, metadata?.appDescription || '') : undefined;
 
+  // Genuine deterministic visual identity comparison (pHash + color palette distance)
+  const visualComparison = candidate.visualProfile && metadata?.officialLogo
+    ? compareVisualProfiles(candidate.visualProfile, metadata.officialLogo)
+    : undefined;
+
   // Scoring weights per category
   let nameScore = 0;
   let handleScore = 0;
@@ -512,6 +518,7 @@ export function calculateRisk(
   let wordingScore = 0;
   let platformOrPublisherScore = 0;
   let unofficialIdentityScore = 0;
+  let visualScore = 0;
 
   const explanationPoints: string[] = [];
 
@@ -577,7 +584,10 @@ export function calculateRisk(
 
     // 2. Publisher mismatch (max 25)
     const publisher = candidate.details?.publisher || candidate.publisher || '';
-    if (publisher && !publisher.toLowerCase().includes(cleanBrand.toLowerCase())) {
+    const officialPublishers = metadata?.officialPublishers || [];
+    const isOfficialPublisher = officialPublishers.some(p => publisher.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(publisher.toLowerCase()));
+
+    if (publisher && !publisher.toLowerCase().includes(cleanBrand.toLowerCase()) && !isOfficialPublisher) {
       platformOrPublisherScore = 25;
       explanationPoints.push(`+25 Third-party unauthorized publisher ("${publisher}")`);
     } else {
@@ -633,6 +643,16 @@ export function calculateRisk(
     explanationPoints.push(`+15 Unverified DNS endpoint without brand DKIM/SPF`);
   }
 
+  // 7. Visual Identity Analysis (max 15)
+  // Only high visual similarity (>= 75%) on unauthorized accounts contributes risk.
+  // Dissimilar logos or benign fan accounts contribute 0 points, protecting against false positives.
+  if (visualComparison && visualComparison.visualScore >= 75) {
+    visualScore = Math.min(15, Math.round((visualComparison.visualScore / 100) * 15));
+    explanationPoints.push(
+      `+${visualScore} Visual logo mimicry (${visualComparison.visualScore}% deterministic structural & color match)`
+    );
+  }
+
   // Sum total score, capped at 100
   const rawScore =
     nameScore +
@@ -640,11 +660,12 @@ export function calculateRisk(
     lookalikeScore +
     wordingScore +
     platformOrPublisherScore +
-    unofficialIdentityScore;
+    unofficialIdentityScore +
+    visualScore;
 
   // Name and handle similarities are correlated. Require two additional independent
   // signal families before assigning High/Critical risk to social accounts.
-  const independentSignals = [lookalikeScore, wordingScore, platformOrPublisherScore].filter(score => score > 0).length;
+  const independentSignals = [lookalikeScore, wordingScore, platformOrPublisherScore, visualScore].filter(score => score > 0).length;
   const calculatedScore = Math.min(isSocial && independentSignals < 2 ? 59 : 100, Math.max(0, rawScore));
   if (calculatedScore < rawScore) explanationPoints.push('Social risk capped at 59: fewer than two independent suspicious signal families');
 
@@ -672,6 +693,7 @@ export function calculateRisk(
     nameSimilarity,
     handleSimilarity,
     descriptionSimilarity,
+    visualSimilarity: visualComparison,
     exactBrandTokenFound,
     matchedTokens,
     suspiciousModifiersFound,
@@ -687,6 +709,7 @@ export function calculateRisk(
       wordingScore,
       platformOrPublisherScore,
       unofficialIdentityScore,
+      visualScore,
     },
     explanationPoints,
     whyThisMatters,
@@ -754,6 +777,7 @@ export function evaluateCandidate(
     dateDetected: candidate.dateDetected,
     explainableSignals,
     analysis,
+    visualProfile: candidate.visualProfile,
     details: {
       ...candidate.details,
       homographEntropy:

@@ -1,3 +1,5 @@
+import { VisualProfile } from './lib/visualIdentity';
+
 export type PlatformType = 'All' | 'Instagram' | 'Facebook' | 'X' | 'Google Play' | 'App Store' | 'Telegram' | 'Web Domain';
 
 export type RiskLevel = 'All' | 'Critical' | 'High' | 'Medium' | 'Low' | 'Trusted';
@@ -18,11 +20,21 @@ export interface LookalikeSignal {
   details?: string;
 }
 
+export interface VisualSimilarityAnalysis {
+  visualScore: number;
+  pHashScore: number;
+  colorScore: number;
+  hammingDistance: number;
+  dominantColorMatch: boolean;
+  explanation: string;
+}
+
 export interface DetectionAnalysis {
   candidateId: string;
   nameSimilarity: number;
   handleSimilarity: number;
   descriptionSimilarity?: number;
+  visualSimilarity?: VisualSimilarityAnalysis;
   exactBrandTokenFound: boolean;
   matchedTokens: string[];
   suspiciousModifiersFound: string[];
@@ -38,6 +50,7 @@ export interface DetectionAnalysis {
     wordingScore: number;
     platformOrPublisherScore: number;
     unofficialIdentityScore: number;
+    visualScore?: number;
   };
   explanationPoints: string[];
   whyThisMatters: string;
@@ -59,6 +72,7 @@ export interface ThreatItem {
   dateDetected: string;
   explainableSignals: ThreatSignal[];
   analysis?: DetectionAnalysis;
+  visualProfile?: VisualProfile;
   details: {
     publisher: string;
     redirectTunnel?: string;
@@ -88,6 +102,7 @@ export interface CandidateEntity {
   summary: string;
   isKnownOfficial?: boolean;
   officialEntity?: string;
+  visualProfile?: VisualProfile;
   details: {
     publisher: string;
     redirectTunnel?: string;
