@@ -37,6 +37,20 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
   // DEMO BRANDS for quick testing
   const demoBrands = ['Paytm', 'Amazon', 'Nike', 'PhonePe', 'Microsoft'];
 
+  // EXPANDED DATASET: 23 Brands categorized by industry sector (Phase 3.5)
+  const ALL_EXPANDED_BRANDS = [
+    { sector: 'Payments / Fintech', brands: ['Paytm', 'PhonePe', 'Google Pay', 'Razorpay'] },
+    { sector: 'Banking', brands: ['HDFC Bank', 'ICICI Bank'] },
+    { sector: 'E-Commerce', brands: ['Amazon', 'Flipkart', 'Meesho'] },
+    { sector: 'Technology', brands: ['Microsoft', 'Google', 'Apple', 'Adobe'] },
+    { sector: 'Telecom', brands: ['Jio', 'Airtel'] },
+    { sector: 'Food / Delivery', brands: ['Zomato', 'Swiggy'] },
+    { sector: 'Travel / Hospitality', brands: ['MakeMyTrip', 'OYO'] },
+    { sector: 'Sports / Lifestyle', brands: ['Nike', 'Adidas'] },
+    { sector: 'Entertainment', brands: ['Netflix', 'Spotify'] },
+  ];
+  const allBrandNames = ALL_EXPANDED_BRANDS.flatMap((g) => g.brands);
+
   // DYNAMIC METRICS: Calculated directly from the current search results (PART M)
   const totalDetections = threats.length;
   const indexedNetworks = new Set(threats.map(t => t.platform)).size;

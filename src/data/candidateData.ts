@@ -1,4 +1,5 @@
 import { CandidateEntity } from '../types';
+import { EXPANDED_PROTOTYPE_CANDIDATES } from './expandedCandidates';
 
 /**
  * PROTOTYPE SOURCE DATASET
@@ -1172,4 +1173,5 @@ export const PROTOTYPE_CANDIDATE_DATASET: CandidateEntity[] = [
       mxRecords: 'N/A',
     },
   },
+  ...EXPANDED_PROTOTYPE_CANDIDATES,
 ];
