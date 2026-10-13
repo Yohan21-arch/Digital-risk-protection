@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BRAND_METADATA } from '../data/brandMetadata';
-import { toAlphaNumeric } from '../lib/detectionEngine';
 import {
   applyRuntimeBrandProfile,
+  getBuiltInBrandMetadata,
   getEffectiveBrandMetadata,
   resetRuntimeBrandProfile,
   RuntimeBrandProfile,
@@ -28,8 +27,7 @@ export const RuntimeRegistryPanel: React.FC<RuntimeRegistryPanelProps> = ({
   onSaved,
   onToast,
 }) => {
-  const key = toAlphaNumeric(brand);
-  const builtIn = BRAND_METADATA[key];
+  const builtIn = getBuiltInBrandMetadata(brand);
   const [domains, setDomains] = useState('');
   const [publishers, setPublishers] = useState('');
   const [packages, setPackages] = useState('');
