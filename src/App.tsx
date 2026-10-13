@@ -190,7 +190,7 @@ export default function App() {
 
   // Save Dossier
   const handleSaveDossier = (threat: ThreatItem) => {
-    showToast(`Evidence Dossier for ${threat.name} SHA-256 sealed and synchronized.`);
+    showToast(`Evidence Dossier for ${threat.name} prepared in prototype mode (not cryptographically sealed).`);
   };
 
   // Confirm Takedown from modal

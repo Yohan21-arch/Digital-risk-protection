@@ -1,3 +1,4 @@
+import { BRAND_METADATA } from '../data/brandMetadata';
 import {
   CandidateEntity,
   DetectionAnalysis,
@@ -6,6 +7,27 @@ import {
   ThreatSignal,
   VerifiedAsset,
 } from '../types';
+
+/** Jaccard overlap of normalized word sets. Empty text provides no evidence. */
+export function textSimilarity(a: string, b: string): number {
+  const tokens = (text: string) => new Set((text.toLowerCase().normalize('NFKC').match(/[\p{L}\p{N}]+/gu) || []));
+  const left = tokens(a);
+  const right = tokens(b);
+  if (!left.size || !right.size) return 0;
+  const overlap = [...left].filter(token => right.has(token)).length;
+  return Math.round(100 * overlap / new Set([...left, ...right]).size);
+}
+
+/** Missing/invalid URLs and registrar labels are not evidence of a domain mismatch. */
+export function hasDomainMismatch(url: string | undefined, officialDomains: string[]): boolean {
+  if (!url || !officialDomains.length) return false;
+  try {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
+    return !officialDomains.some(domain => host === domain || host.endsWith('.' + domain));
+  } catch { return false; }
+}
 
 /**
  * Common high-risk or suspicious modifiers used in brand spoofing
@@ -437,11 +459,11 @@ export function calculateRisk(
         unofficialIdentityScore: 0,
       },
       explanationPoints: [
-        'Verified Official Safe Harbor Anchor registered in brand defense registry',
-        'Cryptographically matched corporate identity',
+        'Verified Official Asset',
+        'Matched against Trusted Asset Registry',
       ],
       whyThisMatters:
-        'This identity matches an authentic, legally authorized corporate asset. It is exempt from automated enforcement.',
+        'This identity matches a trusted registry entry or a known official prototype asset. It is excluded from risk scoring.',
     };
   }
 
@@ -479,6 +501,9 @@ export function calculateRisk(
 
   const isMobileApp =
     candidate.platform === 'Google Play' || candidate.platform === 'App Store';
+
+  const metadata = BRAND_METADATA[toAlphaNumeric(cleanBrand)];
+  const descriptionSimilarity = isMobileApp ? textSimilarity(candidate.summary, metadata?.appDescription || '') : undefined;
 
   // Scoring weights per category
   let nameScore = 0;
@@ -532,18 +557,13 @@ export function calculateRisk(
       );
     }
 
-    // 5. Platform / domain mismatch (max 15)
-    if (candidate.details?.redirectTunnel || candidate.details?.registrar) {
-      platformOrPublisherScore = 12;
-      explanationPoints.push(`+12 Discrepant network infrastructure attribution`);
-    } else {
-      platformOrPublisherScore = 10;
-      explanationPoints.push(`+10 Unaffiliated account host`);
+    // Score only an observed redirect outside known official domains.
+    if (hasDomainMismatch(candidate.details?.redirectTunnel, metadata?.domains || [])) {
+      platformOrPublisherScore = 15;
+      explanationPoints.push('+15 Redirect domain differs from known official brand domains');
     }
-
-    // 6. Unofficial identity (max 15)
-    unofficialIdentityScore = 15;
-    explanationPoints.push(`+15 Entity is absent from brand's verified asset registry`);
+    unofficialIdentityScore = 5;
+    explanationPoints.push('+5 Entity is absent from the trusted asset registry');
   } else if (isMobileApp) {
     // MOBILE APP ENGINE
     // 1. App-name similarity (max 30)
@@ -565,9 +585,9 @@ export function calculateRisk(
       explanationPoints.push(`+15 Unverified developer identity`);
     }
 
-    // 3. Description / vector similarity (max 15)
-    handleScore = 12;
-    explanationPoints.push(`+12 Look-alike app description and deceptive keywords`);
+    // Actual description token overlap (max 15); ignore weak overlap below 20%.
+    handleScore = (descriptionSimilarity ?? 0) >= 20 ? Math.round((descriptionSimilarity ?? 0) * 15 / 100) : 0;
+    if (handleScore > 0) explanationPoints.push('+' + handleScore + ' App description token similarity (' + descriptionSimilarity + '%)');
 
     // 4. Package / bundle similarity (max 10)
     if (tokenAnalysisHandle.exactBrandToken || candidate.handleOrPkg.includes(toAlphaNumeric(cleanBrand))) {
@@ -585,7 +605,7 @@ export function calculateRisk(
 
     // 6. Unofficial identity (max 10)
     unofficialIdentityScore = 10;
-    explanationPoints.push(`+10 Application missing official cryptographic signature`);
+    explanationPoints.push(`+10 Application absent from the trusted asset registry`);
   } else {
     // WEB DOMAIN & OTHER
     if (exactBrandTokenFound) {
@@ -622,7 +642,11 @@ export function calculateRisk(
     platformOrPublisherScore +
     unofficialIdentityScore;
 
-  const calculatedScore = Math.min(100, Math.max(0, rawScore));
+  // Name and handle similarities are correlated. Require two additional independent
+  // signal families before assigning High/Critical risk to social accounts.
+  const independentSignals = [lookalikeScore, wordingScore, platformOrPublisherScore].filter(score => score > 0).length;
+  const calculatedScore = Math.min(isSocial && independentSignals < 2 ? 59 : 100, Math.max(0, rawScore));
+  if (calculatedScore < rawScore) explanationPoints.push('Social risk capped at 59: fewer than two independent suspicious signal families');
 
   // Determine category
   let category: 'Critical' | 'High' | 'Medium' | 'Low' | 'Trusted' = 'Low';
@@ -647,6 +671,7 @@ export function calculateRisk(
     candidateId: candidate.id,
     nameSimilarity,
     handleSimilarity,
+    descriptionSimilarity,
     exactBrandTokenFound,
     matchedTokens,
     suspiciousModifiersFound,
@@ -706,7 +731,7 @@ export function evaluateCandidate(
             : point.includes('modifier') || point.includes('Terminology')
             ? 'warning'
             : 'gavel',
-        score: parseInt(point.match(/^\+(\d+)/)?.[1] || '10', 10),
+        score: parseInt(point.match(/^\+(\d+)/)?.[1] || '0', 10),
         desc: point,
         type,
       };

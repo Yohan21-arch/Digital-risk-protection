@@ -54,9 +54,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-20 bg-[#f9f9f8] border-b border-[#e8e8e7] px-3 sm:px-5 lg:px-6 h-14 lg:h-15 flex justify-between items-center select-none shadow-xs w-full max-w-full min-w-0 gap-2 sm:gap-3">
+    <header className="sticky top-0 z-20 bg-[#f9f9f8] border-b border-[#e8e8e7] px-3 sm:px-5 lg:px-6 min-h-14 h-auto lg:h-15 py-2 lg:py-0 flex flex-wrap lg:flex-nowrap justify-between items-center select-none shadow-xs w-full max-w-full min-w-0 gap-2 sm:gap-3">
       {/* 1. LEFT: Product Wordmark (Relocated from Sidebar) + Divider + Brand Selector */}
-      <div className="flex items-center gap-2 sm:gap-3 lg:gap-3.5 min-w-0 shrink">
+      <div className="flex items-center gap-2 sm:gap-3 lg:gap-3.5 min-w-0 shrink w-full lg:w-auto">
         {/* Product Icon + Wordmark */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none">
           <div
@@ -224,43 +224,43 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             title="Click to view Source Connection Telemetry and System Health"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-            <span className="hidden sm:inline font-['JetBrains_Mono'] text-[11px] text-[#515f74]">Sources 3/4</span>
-            <span className="sm:hidden font-['JetBrains_Mono'] text-[11px] text-[#515f74]">3/4</span>
+            <span className="hidden sm:inline font-['JetBrains_Mono'] text-[11px] text-[#515f74]">Sources · Demo</span>
+            <span className="sm:hidden font-['JetBrains_Mono'] text-[11px] text-[#515f74]">Demo</span>
             <span className="material-symbols-outlined text-[15px] text-[#515f74]">
               {isSourcesOpen ? 'arrow_drop_up' : 'arrow_drop_down'}
             </span>
           </button>
 
           {isSourcesOpen && (
-            <div className="absolute top-full right-0 mt-1.5 w-64 bg-white border border-[#c2c7ca] rounded-xl shadow-xl p-3 z-40 text-xs font-['Inter'] animate-fadeIn">
+            <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 w-64 bg-white border border-[#c2c7ca] rounded-xl shadow-xl p-3 z-40 text-xs font-['Inter'] animate-fadeIn">
               <div className="font-['Manrope'] font-bold text-xs text-[#1a1c1c] pb-2 border-b border-[#eeeeed] flex items-center justify-between">
                 <span>Network Sources</span>
-                <span className="text-[10px] text-emerald-700 font-semibold font-['JetBrains_Mono']">3 of 4 Active</span>
+                <span className="text-[10px] text-emerald-700 font-semibold font-['JetBrains_Mono']">Prototype</span>
               </div>
 
               <div className="divide-y divide-[#eeeeed] py-1 text-[11px]">
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-[#515f74] font-medium">Instagram Graph API</span>
+                  <span className="text-[#515f74] font-medium">Instagram</span>
                   <span className="flex items-center gap-1 text-emerald-700 font-semibold font-['JetBrains_Mono']">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Demo Connector
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-[#515f74] font-medium">Google Play Indexer</span>
+                  <span className="text-[#515f74] font-medium">Google Play</span>
                   <span className="flex items-center gap-1 text-emerald-700 font-semibold font-['JetBrains_Mono']">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Prototype Dataset
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-[#515f74] font-medium">X Enterprise Stream</span>
+                  <span className="text-[#515f74] font-medium">X</span>
                   <span className="flex items-center gap-1 text-amber-700 font-semibold font-['JetBrains_Mono']">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Limited
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Simulated
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-[#515f74] font-medium">App Store Ingestion</span>
+                  <span className="text-[#515f74] font-medium">App Store</span>
                   <span className="flex items-center gap-1 text-[#72787a] font-['JetBrains_Mono']">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#72787a]"></span> Offline
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#72787a]"></span> Demo Connector
                   </span>
                 </div>
               </div>

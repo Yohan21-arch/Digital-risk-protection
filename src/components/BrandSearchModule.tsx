@@ -39,6 +39,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
 
   // DYNAMIC METRICS: Calculated directly from the current search results (PART M)
   const totalDetections = threats.length;
+  const indexedNetworks = new Set(threats.map(t => t.platform)).size;
   const criticalCount = threats.filter((t) => t.riskCategory === 'Critical').length;
   const highCount = threats.filter((t) => t.riskCategory === 'High').length;
   const mediumCount = threats.filter((t) => t.riskCategory === 'Medium').length;
@@ -74,7 +75,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
     { num: '04', title: 'App Stores', desc: 'Searching mobile apps' },
     { num: '05', title: 'Look-alikes', desc: 'Analyzing look-alike names' },
     { num: '06', title: 'Account Auth', desc: 'Evaluating account identity' },
-    { num: '07', title: 'Neural Risk', desc: 'Calculating risk score' },
+    { num: '07', title: 'Risk Analysis', desc: 'Deterministic risk analysis' },
     { num: '08', title: 'Triage Results', desc: 'Preparing final report' },
   ];
 
@@ -172,7 +173,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
         <div className="bg-gradient-to-br from-white to-emerald-50/40 border-t-2 border-t-emerald-600 border-x border-b border-emerald-200/80 rounded-xl p-3.5 sm:p-4 shadow-xs flex flex-col justify-between min-w-0 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <span className="font-['JetBrains_Mono'] text-[10px] sm:text-[11px] text-emerald-800 tracking-wide uppercase font-semibold truncate">
-              Official Assets
+              Verified Assets
             </span>
             <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
               <span
@@ -185,14 +186,14 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-emerald-800 tabular-nums">
-              {trustedCount > 0 ? trustedCount : verifiedAssets.length}
+              {verifiedAssets.length}
             </span>
             <span className="font-['JetBrains_Mono'] text-[9px] sm:text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-semibold">
               Safe Harbor
             </span>
           </div>
           <span className="font-['Inter'] text-[10px] sm:text-[11px] text-emerald-800/80 mt-1 truncate">
-            Excluded from risk score
+            {trustedCount} matched in this scan
           </span>
         </div>
 
@@ -208,10 +209,10 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
             <span className="font-['Noto_Serif',serif] text-2xl sm:text-3xl font-bold text-[#1a1c1c] tabular-nums">
-              6
+              {indexedNetworks}
             </span>
             <span className="font-['JetBrains_Mono'] text-[10px] sm:text-[11px] text-emerald-700 font-semibold">
-              Protocols Live
+              In current results
             </span>
           </div>
           <span className="font-['Inter'] text-[10px] sm:text-[11px] text-[#515f74] mt-1 truncate">
@@ -418,7 +419,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
           {/* Platform Tabs */}
           <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar pb-1 sm:pb-0 max-w-full">
             {(
-              ['All', 'Instagram', 'Facebook', 'X', 'Google Play', 'Telegram', 'Web Domain'] as PlatformType[]
+              ['All', 'Instagram', 'Facebook', 'X', 'Google Play', 'App Store', 'Telegram', 'Web Domain'] as PlatformType[]
             ).map((platform) => {
               const isActive = selectedPlatform === platform;
               const count = platformCounts[platform] || 0;
@@ -513,14 +514,21 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                   className="text-base sm:text-lg font-bold text-[#1a1c1c]"
                   style={{ fontFamily: "'Noto Serif', serif" }}
                 >
-                  No related identities were found in the prototype dataset
+                  {threats.length === 0 ? 'No related identities were found in the prototype dataset.' : 'No detections match the selected filters.'}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#515f74] font-['Inter'] leading-relaxed">
-                  The prototype detection engine didn&apos;t identify any look-alike or spoofed profiles for &ldquo;{currentBrand}&rdquo; in the prototype source dataset.
+                  {threats.length === 0 ? 'No related candidates were found. Try a demo brand below.' : 'Clear the platform and risk filters to see all detections.'}
                 </p>
               </div>
 
-              {/* Quick Search Chips */}
+              {threats.length > 0 ? (
+                <button className="px-3 py-1.5 rounded-lg bg-[#0f2930] text-white text-xs cursor-pointer" onClick={() => {
+                  onSelectPlatform('All');
+                  onSelectRisk('All');
+                }}>
+                  Clear filters
+                </button>
+              ) : (
               <div className="pt-2">
                 <span className="font-['JetBrains_Mono'] text-xs text-[#1a1c1c] font-semibold block mb-2">
                   Try one of our supported demo brands:
@@ -537,6 +545,7 @@ export const BrandSearchModule: React.FC<BrandSearchModuleProps> = ({
                   ))}
                 </div>
               </div>
+              )}
             </div>
           ) : (
             /* PART N — RESULTS UI: Clear, expressive result cards */

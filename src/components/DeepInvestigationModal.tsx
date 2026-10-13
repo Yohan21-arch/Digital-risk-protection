@@ -23,7 +23,7 @@ function getOfficialAnchor(threat: ThreatItem) {
       publisher: 'Amazon Technologies, Inc.',
       domain: 'amazon.com',
       careChannel: '@AmazonHelp',
-      security: 'EV SSL • DNSSEC Signed • Verified Anchor',
+      security: 'Prototype reference — not independently verified',
     };
   }
   if (combined.includes('nike') || combined.includes('nikee')) {
@@ -35,7 +35,7 @@ function getOfficialAnchor(threat: ThreatItem) {
       publisher: 'Nike, Inc. Corporate Headquarters',
       domain: 'nike.com',
       careChannel: '@NikeService',
-      security: 'EV SSL • DNSSEC Signed • Verified Anchor',
+      security: 'Prototype reference — not independently verified',
     };
   }
   if (combined.includes('phonepe') || combined.includes('phone pe') || combined.includes('ph0nepe')) {
@@ -47,7 +47,7 @@ function getOfficialAnchor(threat: ThreatItem) {
       publisher: 'PhonePe Private Limited',
       domain: 'phonepe.com',
       careChannel: '@PhonePeSupport',
-      security: 'EV SSL • RBI Licensed • Verified Anchor',
+      security: 'Prototype reference — not independently verified',
     };
   }
   if (combined.includes('microsoft') || combined.includes('micros0ft') || combined.includes('msft')) {
@@ -59,7 +59,7 @@ function getOfficialAnchor(threat: ThreatItem) {
       publisher: 'Microsoft Corporation',
       domain: 'microsoft.com',
       careChannel: '@MicrosoftHelps',
-      security: 'EV SSL • Entra ID Signed • Verified Anchor',
+      security: 'Prototype reference — not independently verified',
     };
   }
 
@@ -72,7 +72,7 @@ function getOfficialAnchor(threat: ThreatItem) {
     publisher: 'One97 Communications Ltd.',
     domain: 'paytm.com',
     careChannel: '@PaytmCare',
-    security: 'EV SSL • DNSSEC Signed • NPCI Verified',
+    security: 'Prototype reference — not independently verified',
   };
 }
 
@@ -320,7 +320,7 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
                   <span className="material-symbols-outlined text-[#2b94d7] text-[19px]">
                     analytics
                   </span>
-                  <span>Why was this flagged? (Explainable Neural Signals)</span>
+                  <span>Why was this flagged? (Explainable Detection Signals)</span>
                 </h3>
                 <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
                   Deterministic algorithm signals contributing to the final risk classification.
@@ -331,6 +331,9 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
               </span>
             </div>
 
+            {analysis?.descriptionSimilarity !== undefined && (
+              <p className="text-xs font-['Inter'] text-[#515f74] mb-3">App description similarity: <strong>{analysis.descriptionSimilarity}%</strong> (token overlap with official app description; below 20% adds no points).</p>
+            )}
             {/* Algorithm Signal Contribution Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {threat.explainableSignals.map((sig, idx) => {
@@ -384,14 +387,14 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-1 border border-[#c2c7ca]/60 rounded-xl p-4 bg-[#f9f9f8]">
               <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] uppercase font-semibold block mb-2">
-                Automated Evidence Capture
+                Prototype Evidence Preview
               </span>
               <div className="w-full h-36 bg-slate-900 rounded-lg border border-[#c2c7ca] flex flex-col items-center justify-center p-3 text-center text-slate-300">
                 <span className="material-symbols-outlined text-3xl mb-1 text-slate-400">
                   screenshot_monitor
                 </span>
                 <span className="font-['JetBrains_Mono'] text-[11px] text-white font-bold">
-                  SHA-256 Verified Capture
+                  Prototype Evidence Placeholder
                 </span>
                 <span className="font-['JetBrains_Mono'] text-[9px] text-slate-400 mt-1 truncate w-full font-mono">
                   {threat.details.sha256Hash}

@@ -53,7 +53,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({ onClose 
     {
       title: 'Safe Harbor SSL Renewal Completed',
       time: 'Yesterday',
-      desc: 'Wildcard *.paytmbank.com certificate cryptographically signed by DigiCert.',
+      desc: 'Demo notification for *.paytmbank.com; certificate verification is not performed.',
       unread: false,
     },
   ];
@@ -64,7 +64,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({ onClose 
         <div className="px-5 py-4 border-b border-[#eeeeed] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#2b94d7]">notifications</span>
-            <h3 className="font-['Manrope'] font-bold text-sm text-[#1a1c1c]">
+            <h3 className="font-heading-serif font-bold text-sm text-[#1a1c1c]">
               Security Operations Alerts
             </h3>
           </div>

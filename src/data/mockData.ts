@@ -120,7 +120,7 @@ export const INITIAL_THREATS: ThreatItem[] = [
         label: '91% Logo Match',
         icon: 'psychology',
         score: 23,
-        desc: 'Convolutional neural net matched 91% vectors to official corporate emblem.',
+        desc: 'Illustrative prototype signal; automated logo comparison is not implemented.',
         type: 'critical',
       },
       {
@@ -148,7 +148,7 @@ export const INITIAL_THREATS: ThreatItem[] = [
         label: 'Non-One97 Communications Auth',
         icon: 'gavel',
         score: 13,
-        desc: 'Missing cryptographic identity attestation in brand anchor registry.',
+        desc: 'Identity is absent from the trusted asset registry.',
         type: 'warning',
       },
     ],
@@ -295,7 +295,7 @@ export const INITIAL_THREATS: ThreatItem[] = [
         label: 'Primary Anchor Asset',
         icon: 'verified',
         score: 0,
-        desc: 'Direct cryptographic match with Corporate Brand Registry Token ASSET-ONE97-001.',
+        desc: 'Matched against Trusted Asset Registry entry ASSET-ONE97-001.',
         type: 'safe',
       },
       {

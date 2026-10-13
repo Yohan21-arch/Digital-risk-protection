@@ -22,6 +22,7 @@ export interface DetectionAnalysis {
   candidateId: string;
   nameSimilarity: number;
   handleSimilarity: number;
+  descriptionSimilarity?: number;
   exactBrandTokenFound: boolean;
   matchedTokens: string[];
   suspiciousModifiersFound: string[];

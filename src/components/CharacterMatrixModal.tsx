@@ -20,7 +20,7 @@ export const CharacterMatrixModal: React.FC<CharacterMatrixModalProps> = ({
               <span className="material-symbols-outlined text-[20px]">warning</span>
             </div>
             <div>
-              <h2 className="font-['Manrope'] text-lg font-bold text-[#1a1c1c]">
+              <h2 className="font-heading-serif text-lg font-bold text-[#1a1c1c]">
                 Homograph & Typo-squatting Mutation Matrix
               </h2>
               <p className="font-['JetBrains_Mono'] text-xs text-[#515f74]">
@@ -39,7 +39,7 @@ export const CharacterMatrixModal: React.FC<CharacterMatrixModalProps> = ({
         {/* Matrix Table */}
         <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
           <div className="mb-4 p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-xs text-amber-950 font-['Inter']">
-            <strong>Neural Homograph Probing:</strong> Threat actors register visually identical Internationalized Domain Names (IDNs) using Cyrillic, Greek, and Latin accent glyphs, or double-letters to intercept user transactions.
+            <strong>Look-alike Analysis:</strong> Threat actors register visually identical Internationalized Domain Names (IDNs) using Cyrillic, Greek, and Latin accent glyphs, or double-letters to intercept user transactions.
           </div>
 
           <table className="w-full text-left border-collapse font-['Inter'] text-xs">

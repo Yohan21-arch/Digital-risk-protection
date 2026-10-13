@@ -61,7 +61,7 @@ export const IssueTakedownModal: React.FC<IssueTakedownModalProps> = ({
               <span className="material-symbols-outlined text-[20px]">gavel</span>
             </div>
             <div>
-              <h2 className="font-['Manrope'] text-lg font-bold text-[#1a1c1c]">
+              <h2 className="font-heading-serif text-lg font-bold text-[#1a1c1c]">
                 Issue Automated Legal Takedown
               </h2>
               <p className="font-['JetBrains_Mono'] text-xs text-[#515f74]">

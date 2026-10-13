@@ -103,11 +103,11 @@ export const OverviewView: React.FC<ViewProps> = ({
 
       {/* Threat Distribution Table */}
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs w-full min-w-0">
-        <h2 className="font-['Manrope'] text-sm sm:text-base font-bold text-[#1a1c1c] mb-0.5">
+        <h2 className="font-heading-serif text-sm sm:text-base font-bold text-[#1a1c1c] mb-0.5">
           Recent High-Severity Detections
         </h2>
         <p className="text-xs text-[#515f74] font-['Inter'] mb-3">
-          Automated triage queue ordered by neural risk score.
+          Automated triage queue ordered by deterministic risk score.
         </p>
 
         <div className="overflow-x-auto custom-scrollbar w-full max-w-full">
@@ -191,7 +191,7 @@ export const SocialMonitoringView: React.FC<ViewProps> = ({
                   Risk {t.riskScore}/100
                 </span>
               </div>
-              <h3 className="font-['Manrope'] font-bold text-sm text-[#1a1c1c] truncate">{t.name}</h3>
+              <h3 className="font-heading-serif font-bold text-sm text-[#1a1c1c] truncate">{t.name}</h3>
               <p className="font-['JetBrains_Mono'] text-xs text-red-700 mt-0.5 truncate">{t.handleOrPkg}</p>
               <p className="text-xs text-[#515f74] mt-2 line-clamp-2 leading-relaxed">{t.summary}</p>
             </div>
@@ -248,7 +248,7 @@ export const AppMonitoringView: React.FC<ViewProps> = ({
                 <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 font-['JetBrains_Mono'] text-[10px] font-bold">
                   {t.platform} • ROGUE PACKAGE
                 </span>
-                <h3 className="font-['Manrope'] text-sm sm:text-base font-bold text-[#1a1c1c] mt-1 truncate">{t.name}</h3>
+                <h3 className="font-heading-serif text-sm sm:text-base font-bold text-[#1a1c1c] mt-1 truncate">{t.name}</h3>
                 <span className="font-['JetBrains_Mono'] text-xs text-[#515f74] truncate block">{t.handleOrPkg}</span>
               </div>
               <span className="font-['JetBrains_Mono'] text-sm text-red-700 font-bold shrink-0">
@@ -303,7 +303,7 @@ export const DetectionCenterView: React.FC<ViewProps> = ({
             Detection Center & Incident Queue
           </h1>
           <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
-            Complete triage workbench with automated neural classification, legal compliance logs, and takedown workflow.
+            Complete triage workbench with deterministic risk classification, legal compliance logs, and takedown workflow.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0 self-start md:self-auto flex-wrap">
@@ -403,7 +403,7 @@ export const DetectionCenterView: React.FC<ViewProps> = ({
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs w-full min-w-0 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#eeeeed]">
             <div>
-              <h2 className="font-['Manrope'] text-base font-bold text-[#1a1c1c]">
+              <h2 className="font-heading-serif text-base font-bold text-[#1a1c1c]">
                 Enforcement & Compliance Audit Logs
               </h2>
               <p className="text-xs text-[#515f74]">
@@ -486,7 +486,7 @@ export const VerifiedAssetsView: React.FC<ViewProps> = ({
             </div>
 
             <div className="min-w-0">
-              <h3 className="font-['Manrope'] font-bold text-sm text-[#1a1c1c] truncate">{asset.name}</h3>
+              <h3 className="font-heading-serif font-bold text-sm text-[#1a1c1c] truncate">{asset.name}</h3>
               <p className="font-['JetBrains_Mono'] text-xs text-emerald-700 mt-0.5 truncate">{asset.identifier}</p>
             </div>
 
@@ -511,7 +511,7 @@ export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
           Brand Legal Profile & Organization Verification (KYC)
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
-          Cryptographic enterprise identity information filed for automated trademark enforcement.
+          Registered enterprise identity information filed for automated trademark enforcement.
         </p>
       </div>
 
@@ -550,7 +550,7 @@ export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 w-full min-w-0">
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-3 font-['Inter'] text-xs min-w-0">
-          <h2 className="font-['Manrope'] text-sm sm:text-base font-bold text-[#1a1c1c]">
+          <h2 className="font-heading-serif text-sm sm:text-base font-bold text-[#1a1c1c]">
             Corporate Legal Entity
           </h2>
           <div className="space-y-2 text-[#515f74]">
@@ -578,11 +578,11 @@ export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
         </div>
 
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-3 font-['Inter'] text-xs min-w-0">
-          <h2 className="font-['Manrope'] text-sm sm:text-base font-bold text-[#1a1c1c]">
-            Neural Brand Asset Embeddings
+          <h2 className="font-heading-serif text-sm sm:text-base font-bold text-[#1a1c1c]">
+            Official Brand Identity
           </h2>
           <p className="text-[#515f74] leading-relaxed">
-            Official logos registered for visual comparison against spoofed accounts.
+            Reference brand artwork. Automated logo comparison is not part of this prototype.
           </p>
 
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -607,10 +607,10 @@ export const BrandProfileView: React.FC<ViewProps> = ({ onTriggerToast }) => {
           </div>
 
           <button
-            onClick={() => onTriggerToast('Vector embeddings re-indexed with latest filings.')}
+            onClick={() => onTriggerToast('Prototype brand reference refresh requested.')}
             className="w-full py-2 bg-[#0f2930] hover:bg-[#133942] text-white rounded-lg text-xs font-semibold cursor-pointer font-['Manrope']"
           >
-            Recompute Vectors
+            Refresh Brand Reference
           </button>
         </div>
       </div>
@@ -635,7 +635,7 @@ export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
       <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-4 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#eeeeed]">
           <div>
-            <h2 className="font-['Manrope'] text-base font-bold text-[#1a1c1c] flex items-center gap-2">
+            <h2 className="font-heading-serif text-base font-bold text-[#1a1c1c] flex items-center gap-2">
               <span className="material-symbols-outlined text-emerald-600">dns</span>
               <span>System Health & Node Status</span>
             </h2>
@@ -672,7 +672,7 @@ export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:grid-cols-2 gap-4 lg:gap-6 font-['Inter'] text-xs w-full min-w-0">
         {/* Card 1: Automated Enforcement Triggers */}
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-4 min-w-0">
-          <h2 className="font-['Manrope'] text-sm sm:text-base font-bold text-[#1a1c1c]">
+          <h2 className="font-heading-serif text-sm sm:text-base font-bold text-[#1a1c1c]">
             Automated Enforcement Triggers
           </h2>
           <div className="space-y-2.5">
@@ -702,26 +702,26 @@ export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
           </div>
         </div>
 
-        {/* Card 2: Connected Cloud Registrars & Platforms */}
+        {/* Card 2: Prototype Registrars & Platforms */}
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-6 shadow-xs space-y-4 min-w-0">
-          <h2 className="font-['Manrope'] text-sm sm:text-base font-bold text-[#1a1c1c]">
-            Connected Cloud Registrars & Platforms
+          <h2 className="font-heading-serif text-sm sm:text-base font-bold text-[#1a1c1c]">
+            Prototype Registrars & Platforms
           </h2>
           <div className="space-y-2">
             <div className="p-2.5 sm:p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed] flex justify-between items-center gap-2">
               <div className="min-w-0">
                 <span className="font-semibold text-[#1a1c1c] block truncate">Cloudflare Abuse API</span>
-                <span className="text-[11px] text-emerald-700">Authenticated & Active</span>
+                <span className="text-[11px] text-emerald-700">Prototype Dataset</span>
               </div>
-              <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] shrink-0">OAuth 2.0</span>
+              <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] shrink-0">Demo</span>
             </div>
 
             <div className="p-2.5 sm:p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed] flex justify-between items-center gap-2">
               <div className="min-w-0">
                 <span className="font-semibold text-[#1a1c1c] block truncate">Google Play Trust Gateway</span>
-                <span className="text-[11px] text-emerald-700">Service Account Linked</span>
+                <span className="text-[11px] text-emerald-700">Prototype Dataset</span>
               </div>
-              <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] shrink-0">Active</span>
+              <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] shrink-0">Prototype</span>
             </div>
 
             <div className="p-2.5 sm:p-3 bg-[#f9f9f8] rounded-lg border border-[#eeeeed] flex justify-between items-center gap-2">
@@ -729,7 +729,7 @@ export const SettingsView: React.FC<ViewProps> = ({ onTriggerToast }) => {
                 <span className="font-semibold text-[#1a1c1c] block truncate">Meta IP Reporting Portal</span>
                 <span className="text-[11px] text-emerald-700">Brand Rights v3</span>
               </div>
-              <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] shrink-0">Connected</span>
+              <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] shrink-0">Demo Connector</span>
             </div>
           </div>
 
@@ -875,7 +875,7 @@ export const GlobalTelemetryView: React.FC<ViewProps> = () => {
           Global Crawl Telemetry & Endpoint Probes
         </h1>
         <p className="text-xs text-[#515f74] font-['Inter'] mt-0.5">
-          Synchronous probes scanning top-level domain registries, certificate transparency logs, and social APIs.
+          Simulated source status from the controlled prototype dataset; no live API connections.
         </p>
       </div>
 
@@ -885,9 +885,9 @@ export const GlobalTelemetryView: React.FC<ViewProps> = () => {
             <span className="font-bold text-[#1a1c1c] text-sm font-['Manrope']">Instagram Telemetry</span>
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
-          <p className="text-[#515f74]">Graph API Rate-limit: 92% headroom</p>
-          <p className="text-[#515f74]">Last probe: 42 seconds ago</p>
-          <div className="font-['JetBrains_Mono'] text-emerald-700 font-bold">Latency: 140ms</div>
+          <p className="text-[#515f74]">Source: Demo Connector</p>
+          <p className="text-[#515f74]">Live probes are not enabled</p>
+          <div className="font-['JetBrains_Mono'] text-emerald-700 font-bold">Status: Simulated</div>
         </div>
 
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-5 shadow-xs space-y-1.5 min-w-0">
@@ -895,9 +895,9 @@ export const GlobalTelemetryView: React.FC<ViewProps> = () => {
             <span className="font-bold text-[#1a1c1c] text-sm font-['Manrope']">Google Play Store Probe</span>
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
-          <p className="text-[#515f74]">Play Console Indexer: Normal</p>
-          <p className="text-[#515f74]">Last probe: 2 minutes ago</p>
-          <div className="font-['JetBrains_Mono'] text-emerald-700 font-bold">Latency: 180ms</div>
+          <p className="text-[#515f74]">Source: Prototype Dataset</p>
+          <p className="text-[#515f74]">Live probes are not enabled</p>
+          <div className="font-['JetBrains_Mono'] text-emerald-700 font-bold">Status: Simulated</div>
         </div>
 
         <div className="bg-white border border-[#c2c7ca]/60 rounded-xl p-4 sm:p-5 shadow-xs space-y-1.5 min-w-0">
@@ -905,9 +905,9 @@ export const GlobalTelemetryView: React.FC<ViewProps> = () => {
             <span className="font-bold text-[#1a1c1c] text-sm font-['Manrope']">X Enterprise API</span>
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
           </div>
-          <p className="text-[#515f74]">Rate-limit: Throttle active (45/100 requests)</p>
-          <p className="text-[#515f74]">Fallback: Polling scraper engaged</p>
-          <div className="font-['JetBrains_Mono'] text-amber-700 font-bold">Status: Limited</div>
+          <p className="text-[#515f74]">Source: Simulated</p>
+          <p className="text-[#515f74]">Live collection is not enabled</p>
+          <div className="font-['JetBrains_Mono'] text-amber-700 font-bold">Status: Prototype</div>
         </div>
       </div>
     </div>

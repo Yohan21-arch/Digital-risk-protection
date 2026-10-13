@@ -25,11 +25,11 @@ export const EvidenceDossierModal: React.FC<EvidenceDossierModalProps> = ({
               <span className="material-symbols-outlined text-[20px]">verified</span>
             </div>
             <div>
-              <h2 className="font-['Manrope'] text-lg font-bold text-[#1a1c1c]">
-                Cryptographic Evidence Dossier
+              <h2 className="font-heading-serif text-lg font-bold text-[#1a1c1c]">
+                Prototype Evidence Dossier
               </h2>
               <p className="font-['JetBrains_Mono'] text-xs text-[#515f74]">
-                Legal Vault Sealed Audit Package • Case #EDP-2026-9041
+                Illustrative Audit Package • Case #EDP-2026-9041
               </p>
             </div>
           </div>
@@ -55,13 +55,13 @@ export const EvidenceDossierModal: React.FC<EvidenceDossierModalProps> = ({
             </div>
             <div className="sm:text-right font-['JetBrains_Mono'] text-[11px] text-[#515f74]">
               <div>Generated: {generatedDate}</div>
-              <div className="text-emerald-700 font-semibold">Status: Cryptographically Certified</div>
+              <div className="text-emerald-700 font-semibold">Status: Prototype evidence — not certified</div>
             </div>
           </div>
 
           {/* SHA-256 Ledger Section */}
           <div className="border border-[#c2c7ca]/60 rounded-xl p-4 bg-white space-y-3">
-            <h3 className="font-['Manrope'] text-sm font-bold text-[#1a1c1c]">
+            <h3 className="font-heading-serif text-sm font-bold text-[#1a1c1c]">
               Immutable Forensic Ledger Hashes
             </h3>
             <div className="space-y-2 font-['JetBrains_Mono'] text-[11px]">
@@ -69,7 +69,7 @@ export const EvidenceDossierModal: React.FC<EvidenceDossierModalProps> = ({
                 <div className="text-[#515f74] text-[10px] uppercase">Primary Threat Actor Vector</div>
                 <div className="text-red-700 font-semibold mt-0.5">{primaryThreat?.name} ({primaryThreat?.handleOrPkg})</div>
                 <div className="text-[#72787a] text-[10px] mt-1 break-all">
-                  SHA-256: {primaryThreat?.details.sha256Hash}
+                  Demo SHA-256: {primaryThreat?.details.sha256Hash}
                 </div>
               </div>
 
@@ -77,7 +77,7 @@ export const EvidenceDossierModal: React.FC<EvidenceDossierModalProps> = ({
                 <div className="text-[#515f74] text-[10px] uppercase">Safe Harbor Anchor Reference</div>
                 <div className="text-emerald-800 font-semibold mt-0.5">Paytm Official Corporate Primary (ASSET-ONE97-001)</div>
                 <div className="text-[#72787a] text-[10px] mt-1 break-all">
-                  SHA-256: 0000000000000000000000000000000000000000000000000000000000000000
+                  Demo SHA-256: 0000000000000000000000000000000000000000000000000000000000000000
                 </div>
               </div>
             </div>
@@ -85,12 +85,12 @@ export const EvidenceDossierModal: React.FC<EvidenceDossierModalProps> = ({
 
           {/* Technical Findings Summary */}
           <div className="border border-[#c2c7ca]/60 rounded-xl p-4 bg-white space-y-3">
-            <h3 className="font-['Manrope'] text-sm font-bold text-[#1a1c1c]">
+            <h3 className="font-heading-serif text-sm font-bold text-[#1a1c1c]">
               Technical Summary for Legal Filing
             </h3>
             <div className="text-[#515f74] leading-relaxed space-y-2 text-xs">
               <p>
-                1. <strong>Unauthorized Brand Reproduction:</strong> Neural convolutional vector analysis calculated 91% logo similarity against registered trademark assets of One97 Communications Ltd.
+                1. <strong>Unauthorized Brand Reproduction:</strong> The prototype uses deterministic name, token, and look-alike analysis against the selected brand. Logo similarity is not evaluated.
               </p>
               <p>
                 2. <strong>Adversarial Phishing Architecture:</strong> The inspected account routes consumers through proxy DNS hops into Telegram KYC phishing tunnels to solicit unauthorized financial credentials.
