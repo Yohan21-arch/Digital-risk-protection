@@ -1,9 +1,10 @@
 import { BRAND_METADATA } from '../data/brandMetadata';
-import { compareVisualProfiles } from './visualIdentity';
+import { compareVisualProfiles, getStoredVisualReference } from './visualIdentity';
 import {
   CandidateEntity,
   DetectionAnalysis,
   LookalikeSignal,
+  RegistryMatchStatus,
   ThreatItem,
   ThreatSignal,
   VerifiedAsset,
@@ -11,75 +12,38 @@ import {
 
 /** Jaccard overlap of normalized word sets. Empty text provides no evidence. */
 export function textSimilarity(a: string, b: string): number {
-  const tokens = (text: string) => new Set((text.toLowerCase().normalize('NFKC').match(/[\p{L}\p{N}]+/gu) || []));
+  const tokens = (text: string) =>
+    new Set(text.toLowerCase().normalize('NFKC').match(/[\p{L}\p{N}]+/gu) || []);
   const left = tokens(a);
   const right = tokens(b);
   if (!left.size || !right.size) return 0;
-  const overlap = [...left].filter(token => right.has(token)).length;
-  return Math.round(100 * overlap / new Set([...left, ...right]).size);
+  const overlap = [...left].filter((token) => right.has(token)).length;
+  return Math.round((100 * overlap) / new Set([...left, ...right]).size);
 }
 
-/** Missing/invalid URLs and registrar labels are not evidence of a domain mismatch. */
 export function hasDomainMismatch(url: string | undefined, officialDomains: string[]): boolean {
   if (!url || !officialDomains.length) return false;
   try {
     const parsed = new URL(url);
     if (!['http:', 'https:'].includes(parsed.protocol)) return false;
     const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
-    return !officialDomains.some(domain => host === domain || host.endsWith('.' + domain));
-  } catch { return false; }
+    return !officialDomains.some((domain) => host === domain || host.endsWith(`.${domain}`));
+  } catch {
+    return false;
+  }
 }
 
-/**
- * Common high-risk or suspicious modifiers used in brand spoofing
- */
-export const SUSPICIOUS_MODIFIERS: string[] = [
-  'official',
-  'support',
-  'help',
-  'helpdesk',
-  'customer care',
-  'customer service',
-  'verify',
-  'verification',
-  'kyc',
-  'secure',
-  'security',
-  'cashback',
-  'reward',
-  'rewards',
-  'bonus',
-  'claim',
-  'wallet',
-  'service',
-  'india',
-  'account',
-  'direct',
-  'login',
-  'portal',
-  'fastloan',
-  'desk',
+export const SUSPICIOUS_MODIFIERS = [
+  'official', 'support', 'help', 'helpdesk', 'customer care', 'customer service',
+  'verify', 'verification', 'kyc', 'secure', 'security', 'cashback', 'reward',
+  'rewards', 'bonus', 'claim', 'wallet', 'service', 'india', 'account', 'direct',
+  'login', 'portal', 'fastloan', 'desk',
 ];
 
-/**
- * Common character lookalike pairs used in typo-squatting and impersonation
- */
 const LOOKALIKE_MAP: Record<string, string> = {
-  '0': 'o',
-  '1': 'i',
-  '|': 'l',
-  '!': 'i',
-  '@': 'a',
-  $: 's',
-  '3': 'e',
-  '5': 's',
-  '8': 'b',
+  '0': 'o', '1': 'i', '|': 'l', '!': 'i', '@': 'a', '$': 's', '3': 'e', '5': 's', '8': 'b',
 };
 
-/**
- * 1. STRING NORMALIZATION
- * Cleans string, lowercases, removes excessive punctuation, collapses spaces.
- */
 export function normalizeIdentity(text: string): string {
   if (!text) return '';
   return text
@@ -90,244 +54,179 @@ export function normalizeIdentity(text: string): string {
     .trim();
 }
 
-/**
- * Punctuation-free alphanumeric form for direct token and distance analysis
- */
 export function toAlphaNumeric(text: string): string {
   if (!text) return '';
-  return text
-    .normalize('NFKD')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+  return text.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-/**
- * 2. LEVENSHTEIN DISTANCE
- * Standard dynamic programming implementation.
- */
+export function normalizePublisherName(text: string): string {
+  if (!text) return '';
+  return text
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/\bprivate\s+limited\b/g, 'pvt ltd')
+    .replace(/\blimited\b/g, 'ltd')
+    .replace(/\bincorporated\b/g, 'inc')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function isOfficialPublisher(
+  publisher: string | undefined,
+  officialPublishers: string[]
+): boolean {
+  const observed = normalizePublisherName(publisher || '');
+  if (!observed) return false;
+  return officialPublishers.some((item) => normalizePublisherName(item) === observed);
+}
+
+export function normalizePackageIdentifier(text: string): string {
+  return (text || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^bundle:\s*/i, '')
+    .replace(/\s+/g, '');
+}
+
+export function isOfficialPackage(
+  identifier: string | undefined,
+  officialPackages: string[]
+): boolean {
+  const observed = normalizePackageIdentifier(identifier || '');
+  if (!observed) return false;
+  return officialPackages.some((item) => normalizePackageIdentifier(item) === observed);
+}
+
 export function levenshteinDistance(a: string, b: string): number {
   const s1 = a || '';
   const s2 = b || '';
-  const m = s1.length;
-  const n = s2.length;
+  if (!s1.length) return s2.length;
+  if (!s2.length) return s1.length;
 
-  if (m === 0) return n;
-  if (n === 0) return m;
+  let prev = Array.from({ length: s2.length + 1 }, (_, i) => i);
+  let curr = new Array(s2.length + 1).fill(0);
 
-  // Use two rows for memory efficiency
-  let prevRow = new Array(n + 1);
-  let currRow = new Array(n + 1);
-
-  for (let j = 0; j <= n; j++) {
-    prevRow[j] = j;
-  }
-
-  for (let i = 1; i <= m; i++) {
-    currRow[0] = i;
-    const charA = s1.charCodeAt(i - 1);
-
-    for (let j = 1; j <= n; j++) {
-      const charB = s2.charCodeAt(j - 1);
-      const cost = charA === charB ? 0 : 1;
-      currRow[j] = Math.min(
-        currRow[j - 1] + 1, // insertion
-        prevRow[j] + 1, // deletion
-        prevRow[j - 1] + cost // substitution
-      );
+  for (let i = 1; i <= s1.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= s2.length; j++) {
+      const cost = s1.charCodeAt(i - 1) === s2.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
     }
-
-    // Swap rows
-    const temp = prevRow;
-    prevRow = currRow;
-    currRow = temp;
+    [prev, curr] = [curr, prev];
   }
-
-  return prevRow[n];
+  return prev[s2.length];
 }
 
-/**
- * Calculates similarity percentage between 0 and 100 based on Levenshtein distance
- */
 export function similarityPercent(a: string, b: string): number {
-  const normA = toAlphaNumeric(a);
-  const normB = toAlphaNumeric(b);
-
-  if (!normA && !normB) return 100;
-  if (!normA || !normB) return 0;
-  if (normA === normB) return 100;
-
-  const maxLen = Math.max(normA.length, normB.length);
-  if (maxLen === 0) return 100;
-
-  const dist = levenshteinDistance(normA, normB);
-  const score = Math.round((1 - dist / maxLen) * 100);
-  return Math.max(0, Math.min(100, score));
+  const left = toAlphaNumeric(a);
+  const right = toAlphaNumeric(b);
+  if (!left && !right) return 100;
+  if (!left || !right) return 0;
+  if (left === right) return 100;
+  const distance = levenshteinDistance(left, right);
+  return Math.max(0, Math.min(100, Math.round((1 - distance / Math.max(left.length, right.length)) * 100)));
 }
 
-/**
- * 3. TOKEN-BASED SIMILARITY
- * Checks if target brand token appears cleanly in the target text.
- */
-export function checkTokenMatch(
-  brandQuery: string,
-  targetText: string
-): {
-  exactBrandToken: boolean;
-  tokenSimilarity: number;
-  matchedTokens: string[];
-} {
-  const normBrand = toAlphaNumeric(brandQuery);
-  if (!normBrand) {
-    return { exactBrandToken: false, tokenSimilarity: 0, matchedTokens: [] };
-  }
+export function checkTokenMatch(brandQuery: string, targetText: string) {
+  const brand = toAlphaNumeric(brandQuery);
+  if (!brand) return { exactBrandToken: false, tokenSimilarity: 0, matchedTokens: [] as string[] };
 
-  const rawNormalized = normalizeIdentity(targetText);
-  const tokens = rawNormalized.split(/\s+/).filter(Boolean);
+  const tokens = normalizeIdentity(targetText).split(/\s+/).filter(Boolean);
   const matchedTokens: string[] = [];
-
-  let exactFound = false;
-  let highestSimilarity = 0;
+  let exactBrandToken = false;
+  let tokenSimilarity = 0;
 
   for (const token of tokens) {
-    const cleanTok = toAlphaNumeric(token);
-    if (cleanTok === normBrand) {
-      exactFound = true;
+    const cleaned = toAlphaNumeric(token);
+    const similarity = similarityPercent(brand, cleaned);
+    tokenSimilarity = Math.max(tokenSimilarity, similarity);
+    if (cleaned === brand) {
+      exactBrandToken = true;
       matchedTokens.push(token);
-      highestSimilarity = 100;
-    } else {
-      const sim = similarityPercent(normBrand, cleanTok);
-      if (sim > highestSimilarity) {
-        highestSimilarity = sim;
-      }
-      if (sim >= 80) {
-        matchedTokens.push(token);
-      }
+    } else if (similarity >= 80) {
+      matchedTokens.push(token);
     }
   }
 
-  // Also check if raw string directly contains the continuous brand string
-  const continuousTarget = toAlphaNumeric(targetText);
-  if (continuousTarget.includes(normBrand)) {
-    exactFound = true;
-    highestSimilarity = 100;
+  if (toAlphaNumeric(targetText).includes(brand)) {
+    exactBrandToken = true;
+    tokenSimilarity = 100;
   }
 
-  return {
-    exactBrandToken: exactFound,
-    tokenSimilarity: highestSimilarity,
-    matchedTokens,
-  };
+  return { exactBrandToken, tokenSimilarity, matchedTokens };
 }
 
-/**
- * 4. SUSPICIOUS MODIFIER DETECTION
- * Identifies contextual words such as 'support', 'verify', 'rewards', etc.
- */
 export function findSuspiciousModifiers(text: string): string[] {
   const normalized = normalizeIdentity(text);
-  const found: string[] = [];
-
-  for (const mod of SUSPICIOUS_MODIFIERS) {
-    // Check whole word boundary
-    const regex = new RegExp(`\\b${mod}\\b`, 'i');
-    if (regex.test(normalized)) {
-      found.push(mod);
-    }
-  }
-
-  return found;
+  return SUSPICIOUS_MODIFIERS.filter((modifier) =>
+    new RegExp(`\\b${modifier.replace(/\s+/g, '\\s+')}\\b`, 'i').test(normalized)
+  );
 }
 
-/**
- * 5. CHARACTER SUBSTITUTION / LOOKALIKE DETECTION
- * Detects leetspeak substitutions (o -> 0, i -> 1), char duplication (paytmm),
- * missing chars, hyphens, and inserted spaces.
- */
 export function detectLookalikeTechniques(
   brandQuery: string,
   candidateName: string,
   candidateHandle: string
 ): LookalikeSignal[] {
   const signals: LookalikeSignal[] = [];
-  const targetBrandAlpha = toAlphaNumeric(brandQuery);
-  const targetBrand = brandQuery.toLowerCase().trim();
+  const brand = toAlphaNumeric(brandQuery);
+  const combined = `${candidateName} ${candidateHandle}`.toLowerCase();
+  const tokens = normalizeIdentity(combined).split(/\s+/).map(toAlphaNumeric).filter(Boolean);
 
-  const combinedCandidate = `${candidateName} ${candidateHandle}`.toLowerCase();
-  const candidateAlphaTokens = normalizeIdentity(`${candidateName} ${candidateHandle}`)
-    .split(/\s+/)
-    .map(toAlphaNumeric)
-    .filter(Boolean);
-
-  // Check character substitutions (e.g., o -> 0, i -> 1, s -> $)
-  for (const token of candidateAlphaTokens) {
-    // Attempt reverse translation from leetspeak to letters
+  for (const token of tokens) {
     let translated = '';
-    const replacementsFound: { original: string; replacement: string }[] = [];
-
+    const replacements: { original: string; replacement: string }[] = [];
     for (const char of token) {
       if (LOOKALIKE_MAP[char]) {
-        replacementsFound.push({ original: LOOKALIKE_MAP[char], replacement: char });
+        replacements.push({ original: LOOKALIKE_MAP[char], replacement: char });
         translated += LOOKALIKE_MAP[char];
       } else {
         translated += char;
       }
     }
 
-    if (replacementsFound.length > 0 && translated.includes(targetBrandAlpha)) {
-      for (const rep of replacementsFound) {
+    if (replacements.length && translated.includes(brand)) {
+      for (const replacement of replacements) {
         signals.push({
           detected: true,
           technique: 'Character substitution (Leetspeak)',
-          original: rep.original,
-          replacement: rep.replacement,
-          details: `Replaced letter "${rep.original}" with look-alike "${rep.replacement}" in "${token}"`,
+          original: replacement.original,
+          replacement: replacement.replacement,
+          details: `Look-alike character used in ${token}`,
         });
       }
     }
 
-    // Check duplicated characters (e.g. paytmm, nikee, phonepp)
-    if (token.length === targetBrandAlpha.length + 1 && token.startsWith(targetBrandAlpha)) {
-      const extraChar = token[token.length - 1];
+    if (token.length === brand.length + 1 && token.startsWith(brand)) {
       signals.push({
         detected: true,
         technique: 'Repeated character duplication',
-        original: targetBrandAlpha,
+        original: brand,
         replacement: token,
-        details: `Appended duplicated character "${extraChar}" at the end of brand name`,
       });
     }
 
-    // Check missing characters (e.g. instgram)
-    if (
-      targetBrandAlpha.length >= 5 &&
-      token.length === targetBrandAlpha.length - 1 &&
-      similarityPercent(targetBrandAlpha, token) >= 80
-    ) {
+    if (brand.length >= 5 && token.length === brand.length - 1 && similarityPercent(brand, token) >= 80) {
       signals.push({
         detected: true,
         technique: 'Omission / Typo manipulation',
-        original: targetBrandAlpha,
+        original: brand,
         replacement: token,
-        details: `Omitted character to exploit user typing slips ("${token}" vs "${targetBrandAlpha}")`,
       });
     }
   }
 
-  // Check inserted separators or spaces (e.g. "phone-pe" or "phone pe")
-  if (targetBrandAlpha.length >= 6) {
-    const half1 = targetBrandAlpha.slice(0, Math.floor(targetBrandAlpha.length / 2));
-    const half2 = targetBrandAlpha.slice(Math.floor(targetBrandAlpha.length / 2));
-    if (
-      combinedCandidate.includes(`${half1} `) ||
-      combinedCandidate.includes(`${half1}-`) ||
-      combinedCandidate.includes(`${half1}_`)
-    ) {
+  if (brand.length >= 6) {
+    const split = Math.floor(brand.length / 2);
+    const left = brand.slice(0, split);
+    if (combined.includes(`${left} `) || combined.includes(`${left}-`) || combined.includes(`${left}_`)) {
       signals.push({
         detected: true,
         technique: 'Delimiter insertion',
-        original: targetBrandAlpha,
-        replacement: `${half1}-${half2}`,
-        details: `Inserted space or hyphen separator inside brand token`,
+        original: brand,
+        replacement: `${brand.slice(0, split)}-${brand.slice(split)}`,
       });
     }
   }
@@ -335,114 +234,75 @@ export function detectLookalikeTechniques(
   return signals;
 }
 
-/**
- * 6. UNICODE / HOMOGRAPH CHECK
- * Flags mixed scripts or non-ASCII lookalikes (e.g., Cyrillic 'а', Greek 'о').
- */
-export function detectSuspiciousUnicode(text: string): {
-  hasSuspiciousUnicode: boolean;
-  suspiciousChars: string[];
-} {
+export function detectSuspiciousUnicode(text: string) {
   const suspiciousChars: string[] = [];
-
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    // Non-ASCII characters that mimic Latin letters (Cyrillic U+0400 to U+04FF, etc.)
-    if (code >= 0x0400 && code <= 0x04ff) {
-      suspiciousChars.push(text[i]);
-    } else if (code >= 0x0370 && code <= 0x03ff) {
-      suspiciousChars.push(text[i]);
+  for (const char of text) {
+    const code = char.charCodeAt(0);
+    if ((code >= 0x0400 && code <= 0x04ff) || (code >= 0x0370 && code <= 0x03ff)) {
+      suspiciousChars.push(char);
     }
   }
-
-  return {
-    hasSuspiciousUnicode: suspiciousChars.length > 0,
-    suspiciousChars,
-  };
+  return { hasSuspiciousUnicode: suspiciousChars.length > 0, suspiciousChars };
 }
 
-/**
- * 7. OFFICIAL-ASSET EXCLUSION
- * Checks whether candidate matches an existing authentic safe harbor asset.
- */
 export function checkOfficialAssetMatch(
   candidate: CandidateEntity,
   verifiedAssets: VerifiedAsset[]
 ): boolean {
   if (candidate.isKnownOfficial) return true;
-
   const candidateHandle = normalizeIdentity(candidate.handleOrPkg);
   const candidateName = normalizeIdentity(candidate.name);
-
   return verifiedAssets.some((asset) => {
     const assetId = normalizeIdentity(asset.identifier);
     const assetName = normalizeIdentity(asset.name);
-
-    return (
-      (assetId && (assetId === candidateHandle || candidateHandle.includes(assetId))) ||
+    return Boolean(
+      (assetId && assetId === candidateHandle) ||
       (assetName && assetName === candidateName)
     );
   });
 }
 
-/**
- * RELEVANCE CHECK (PART J)
- * Filters out candidates that are completely unrelated to the searched brand.
- * e.g., Searching "Nike" will never return "Amazon Rewards" or "Paytm".
- */
-export function isCandidateRelevant(
-  brandQuery: string,
-  candidate: CandidateEntity
-): boolean {
-  if (!brandQuery || !candidate) return false;
-
-  const cleanBrand = toAlphaNumeric(brandQuery);
-  if (!cleanBrand || cleanBrand.length < 2) return false;
-
-  // Direct targetBrand match (if tagged in prototype dataset)
-  if (candidate.targetBrand && toAlphaNumeric(candidate.targetBrand) === cleanBrand) {
-    return true;
-  }
-
-  // Token match
-  const tokenMatchName = checkTokenMatch(brandQuery, candidate.name);
-  const tokenMatchHandle = checkTokenMatch(brandQuery, candidate.handleOrPkg);
-  if (tokenMatchName.exactBrandToken || tokenMatchHandle.exactBrandToken) {
-    return true;
-  }
-
-  // Levenshtein similarity on tokens
-  const nameSim = similarityPercent(cleanBrand, toAlphaNumeric(candidate.name));
-  const handleSim = similarityPercent(cleanBrand, toAlphaNumeric(candidate.handleOrPkg));
-  if (nameSim >= 65 || handleSim >= 65) {
-    return true;
-  }
-
-  // Lookalike signal test
-  const lookalike = detectLookalikeTechniques(brandQuery, candidate.name, candidate.handleOrPkg);
-  if (lookalike.length > 0) {
-    return true;
-  }
-
-  return false;
+export function isCandidateRelevant(brandQuery: string, candidate: CandidateEntity): boolean {
+  const brand = toAlphaNumeric(brandQuery);
+  if (!brand || brand.length < 2) return false;
+  if (candidate.targetBrand && toAlphaNumeric(candidate.targetBrand) === brand) return true;
+  if (checkTokenMatch(brandQuery, candidate.name).exactBrandToken) return true;
+  if (checkTokenMatch(brandQuery, candidate.handleOrPkg).exactBrandToken) return true;
+  if (similarityPercent(brand, candidate.name) >= 65 || similarityPercent(brand, candidate.handleOrPkg) >= 65) return true;
+  return detectLookalikeTechniques(brandQuery, candidate.name, candidate.handleOrPkg).length > 0;
 }
 
-/**
- * 8. REAL DETERMINISTIC RISK CALCULATION & EXPLAINABLE SIGNALS (PART H & I)
- */
+function matchStatus(value: string | undefined, officialValues: string[], matcher: (v: string | undefined, o: string[]) => boolean): RegistryMatchStatus {
+  if (!value) return 'UNKNOWN';
+  return matcher(value, officialValues) ? 'MATCHED' : 'MISMATCH';
+}
+
 export function calculateRisk(
   brandQuery: string,
   candidate: CandidateEntity,
   verifiedAssets: VerifiedAsset[]
 ): DetectionAnalysis {
-  // Check official asset match first
   const isOfficialMatch = checkOfficialAssetMatch(candidate, verifiedAssets);
+  const metadata = BRAND_METADATA[toAlphaNumeric(brandQuery)];
+  const isMobileApp = candidate.platform === 'Google Play' || candidate.platform === 'App Store';
+
+  const publisher = candidate.details?.publisher || candidate.publisher || '';
+  const publisherMatch = isMobileApp
+    ? matchStatus(publisher, metadata?.officialPublishers || [], isOfficialPublisher)
+    : undefined;
+  const packageMatch = isMobileApp
+    ? matchStatus(candidate.handleOrPkg, metadata?.officialPackages || [], isOfficialPackage)
+    : undefined;
 
   if (isOfficialMatch) {
     return {
       candidateId: candidate.id,
       nameSimilarity: 100,
       handleSimilarity: 100,
+      descriptionSimilarity: isMobileApp ? textSimilarity(candidate.summary, metadata?.appDescription || '') : undefined,
+      visualSimilarity: compareVisualProfiles(candidate.visualProfile, getStoredVisualReference(toAlphaNumeric(brandQuery)) || metadata?.officialLogo),
+      publisherMatch,
+      packageMatch,
       exactBrandTokenFound: true,
       matchedTokens: [brandQuery],
       suspiciousModifiersFound: [],
@@ -458,60 +318,29 @@ export function calculateRisk(
         wordingScore: 0,
         platformOrPublisherScore: 0,
         unofficialIdentityScore: 0,
+        visualScore: 0,
       },
-      explanationPoints: [
-        'Verified Official Asset',
-        'Matched against Trusted Asset Registry',
-      ],
-      whyThisMatters:
-        'This identity matches a trusted registry entry or a known official prototype asset. It is excluded from risk scoring.',
+      explanationPoints: ['Verified Official Asset', 'Matched against Trusted Asset Registry'],
+      whyThisMatters: 'This identity matches the trusted prototype registry and is excluded from risk scoring.',
     };
   }
 
-  // Run feature extractors
   const cleanBrand = brandQuery.trim();
   const nameSimilarity = similarityPercent(cleanBrand, candidate.name);
   const handleSimilarity = similarityPercent(cleanBrand, candidate.handleOrPkg);
-
-  const tokenAnalysisName = checkTokenMatch(cleanBrand, candidate.name);
-  const tokenAnalysisHandle = checkTokenMatch(cleanBrand, candidate.handleOrPkg);
-  const exactBrandTokenFound =
-    tokenAnalysisName.exactBrandToken || tokenAnalysisHandle.exactBrandToken;
-
-  const matchedTokens = Array.from(
-    new Set([...tokenAnalysisName.matchedTokens, ...tokenAnalysisHandle.matchedTokens])
-  );
-
-  const suspiciousModifiersFound = findSuspiciousModifiers(
-    `${candidate.name} ${candidate.handleOrPkg} ${candidate.summary}`
-  );
-
-  const lookalikeSignals = detectLookalikeTechniques(
-    cleanBrand,
-    candidate.name,
-    candidate.handleOrPkg
-  );
-
+  const tokenName = checkTokenMatch(cleanBrand, candidate.name);
+  const tokenHandle = checkTokenMatch(cleanBrand, candidate.handleOrPkg);
+  const exactBrandTokenFound = tokenName.exactBrandToken || tokenHandle.exactBrandToken;
+  const matchedTokens = Array.from(new Set([...tokenName.matchedTokens, ...tokenHandle.matchedTokens]));
+  const suspiciousModifiersFound = findSuspiciousModifiers(`${candidate.name} ${candidate.handleOrPkg} ${candidate.summary}`);
+  const lookalikeSignals = detectLookalikeTechniques(cleanBrand, candidate.name, candidate.handleOrPkg);
   const unicodeCheck = detectSuspiciousUnicode(`${candidate.name} ${candidate.handleOrPkg}`);
-
-  const isSocial =
-    candidate.platform === 'Instagram' ||
-    candidate.platform === 'X' ||
-    candidate.platform === 'Facebook' ||
-    candidate.platform === 'Telegram';
-
-  const isMobileApp =
-    candidate.platform === 'Google Play' || candidate.platform === 'App Store';
-
-  const metadata = BRAND_METADATA[toAlphaNumeric(cleanBrand)];
+  const isSocial = ['Instagram', 'X', 'Facebook', 'Telegram'].includes(candidate.platform);
   const descriptionSimilarity = isMobileApp ? textSimilarity(candidate.summary, metadata?.appDescription || '') : undefined;
 
-  // Genuine deterministic visual identity comparison (pHash + color palette distance)
-  const visualComparison = candidate.visualProfile && metadata?.officialLogo
-    ? compareVisualProfiles(candidate.visualProfile, metadata.officialLogo)
-    : undefined;
+  const officialVisual = getStoredVisualReference(toAlphaNumeric(cleanBrand)) || metadata?.officialLogo;
+  const visualComparison = compareVisualProfiles(candidate.visualProfile, officialVisual);
 
-  // Scoring weights per category
   let nameScore = 0;
   let handleScore = 0;
   let lookalikeScore = 0;
@@ -519,14 +348,12 @@ export function calculateRisk(
   let platformOrPublisherScore = 0;
   let unofficialIdentityScore = 0;
   let visualScore = 0;
-
   const explanationPoints: string[] = [];
 
   if (isSocial) {
-    // 1. Brand / Name similarity (max 25)
     if (exactBrandTokenFound) {
       nameScore = 25;
-      explanationPoints.push(`+25 Brand name closely resembles official protected identity`);
+      explanationPoints.push('+25 Brand name closely resembles official protected identity');
     } else if (nameSimilarity >= 80) {
       nameScore = Math.round((nameSimilarity / 100) * 24);
       explanationPoints.push(`+${nameScore} High name similarity (${nameSimilarity}%)`);
@@ -535,158 +362,104 @@ export function calculateRisk(
       explanationPoints.push(`+${nameScore} Moderate name similarity (${nameSimilarity}%)`);
     }
 
-    // 2. Username / Handle similarity (max 20)
-    if (tokenAnalysisHandle.exactBrandToken) {
+    if (tokenHandle.exactBrandToken) {
       handleScore = 20;
-      explanationPoints.push(`+20 Username handle directly embeds protected brand token`);
+      explanationPoints.push('+20 Username handle directly embeds protected brand token');
     } else if (handleSimilarity >= 75) {
       handleScore = Math.round((handleSimilarity / 100) * 18);
       explanationPoints.push(`+${handleScore} Username resembles official account`);
     }
 
-    // 3. Lookalike manipulation (max 15)
-    if (lookalikeSignals.length > 0) {
+    if (lookalikeSignals.length) {
       lookalikeScore = Math.min(15, lookalikeSignals.length * 8 + 7);
-      const rep = lookalikeSignals[0];
-      explanationPoints.push(
-        `+${lookalikeScore} ${rep.technique}: "${rep.original}" → "${rep.replacement}"`
-      );
+      explanationPoints.push(`+${lookalikeScore} ${lookalikeSignals[0].technique}`);
     } else if (unicodeCheck.hasSuspiciousUnicode) {
       lookalikeScore = 12;
-      explanationPoints.push(`+12 Non-standard cross-script Unicode characters detected`);
+      explanationPoints.push('+12 Cross-script Unicode look-alike characters detected');
     }
 
-    // 4. Suspicious wording / modifiers (max 10)
-    if (suspiciousModifiersFound.length > 0) {
+    if (suspiciousModifiersFound.length) {
       wordingScore = Math.min(10, suspiciousModifiersFound.length * 5);
-      explanationPoints.push(
-        `+${wordingScore} High-risk modifier terminology (${suspiciousModifiersFound.slice(0, 3).join(', ')})`
-      );
+      explanationPoints.push(`+${wordingScore} High-risk modifier terminology (${suspiciousModifiersFound.slice(0, 3).join(', ')})`);
     }
 
-    // Score only an observed redirect outside known official domains.
     if (hasDomainMismatch(candidate.details?.redirectTunnel, metadata?.domains || [])) {
       platformOrPublisherScore = 15;
       explanationPoints.push('+15 Redirect domain differs from known official brand domains');
     }
+
     unofficialIdentityScore = 5;
     explanationPoints.push('+5 Entity is absent from the trusted asset registry');
   } else if (isMobileApp) {
-    // MOBILE APP ENGINE
-    // 1. App-name similarity (max 30)
     if (exactBrandTokenFound) {
-      nameScore = 30;
-      explanationPoints.push(`+30 App title embeds protected trademark identifier`);
+      nameScore = 25;
+      explanationPoints.push('+25 App title embeds protected brand identifier');
     } else if (nameSimilarity >= 70) {
-      nameScore = Math.round((nameSimilarity / 100) * 28);
-      explanationPoints.push(`+${nameScore} App name high resemblance (${nameSimilarity}%)`);
+      nameScore = Math.round((nameSimilarity / 100) * 23);
+      explanationPoints.push(`+${nameScore} App-name resemblance (${nameSimilarity}%)`);
     }
 
-    // 2. Publisher mismatch (max 25)
-    const publisher = candidate.details?.publisher || candidate.publisher || '';
-    const officialPublishers = metadata?.officialPublishers || [];
-    const isOfficialPublisher = officialPublishers.some(p => publisher.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(publisher.toLowerCase()));
-
-    if (publisher && !publisher.toLowerCase().includes(cleanBrand.toLowerCase()) && !isOfficialPublisher) {
-      platformOrPublisherScore = 25;
-      explanationPoints.push(`+25 Third-party unauthorized publisher ("${publisher}")`);
-    } else {
-      platformOrPublisherScore = 15;
-      explanationPoints.push(`+15 Unverified developer identity`);
+    if (publisherMatch === 'MISMATCH') {
+      platformOrPublisherScore = 20;
+      explanationPoints.push(`+20 Publisher mismatch ("${publisher || 'Unknown'}")`);
+    } else if (publisherMatch === 'UNKNOWN') {
+      platformOrPublisherScore = 8;
+      explanationPoints.push('+8 Publisher identity unavailable');
     }
 
-    // Actual description token overlap (max 15); ignore weak overlap below 20%.
-    handleScore = (descriptionSimilarity ?? 0) >= 20 ? Math.round((descriptionSimilarity ?? 0) * 15 / 100) : 0;
-    if (handleScore > 0) explanationPoints.push('+' + handleScore + ' App description token similarity (' + descriptionSimilarity + '%)');
+    handleScore = (descriptionSimilarity ?? 0) >= 20
+      ? Math.round(((descriptionSimilarity ?? 0) * 15) / 100)
+      : 0;
+    if (handleScore) explanationPoints.push(`+${handleScore} App description similarity (${descriptionSimilarity}%)`);
 
-    // 4. Package / bundle similarity (max 10)
-    if (tokenAnalysisHandle.exactBrandToken || candidate.handleOrPkg.includes(toAlphaNumeric(cleanBrand))) {
+    if (packageMatch === 'MISMATCH' && (tokenHandle.exactBrandToken || toAlphaNumeric(candidate.handleOrPkg).includes(toAlphaNumeric(cleanBrand)))) {
       lookalikeScore = 10;
-      explanationPoints.push(`+10 Package bundle claims official brand namespace`);
+      explanationPoints.push('+10 Package identifier resembles the brand but is not in the trusted package registry');
     }
 
-    // 5. Suspicious modifiers (max 10)
-    if (suspiciousModifiersFound.length > 0) {
+    if (suspiciousModifiersFound.length) {
       wordingScore = Math.min(10, suspiciousModifiersFound.length * 5);
-      explanationPoints.push(
-        `+${wordingScore} Predatory terminology in listing (${suspiciousModifiersFound.slice(0, 2).join(', ')})`
-      );
+      explanationPoints.push(`+${wordingScore} Suspicious listing terminology (${suspiciousModifiersFound.slice(0, 2).join(', ')})`);
     }
 
-    // 6. Unofficial identity (max 10)
-    unofficialIdentityScore = 10;
-    explanationPoints.push(`+10 Application absent from the trusted asset registry`);
+    unofficialIdentityScore = 5;
+    explanationPoints.push('+5 Application is absent from the trusted asset registry');
   } else {
-    // WEB DOMAIN & OTHER
     if (exactBrandTokenFound) {
       nameScore = 30;
-      explanationPoints.push(`+30 Domain name contains full brand wordmark`);
+      explanationPoints.push('+30 Domain name contains full brand wordmark');
     } else {
       nameScore = Math.round((nameSimilarity / 100) * 25);
-      explanationPoints.push(`+${nameScore} Domain name similarity (${nameSimilarity}%)`);
+      if (nameScore) explanationPoints.push(`+${nameScore} Domain-name similarity (${nameSimilarity}%)`);
     }
-
-    if (lookalikeSignals.length > 0) {
+    if (lookalikeSignals.length) {
       lookalikeScore = 20;
-      explanationPoints.push(`+20 Typosquatting / Look-alike character manipulation`);
+      explanationPoints.push('+20 Typosquatting / look-alike manipulation');
     }
-
-    if (suspiciousModifiersFound.length > 0) {
+    if (suspiciousModifiersFound.length) {
       wordingScore = 15;
-      explanationPoints.push(`+15 Phishing lure keyword in URL path`);
+      explanationPoints.push('+15 Phishing-lure keyword detected');
     }
-
-    platformOrPublisherScore = 15;
-    explanationPoints.push(`+15 Bulletproof or privacy-shielded registrar`);
-
-    unofficialIdentityScore = 15;
-    explanationPoints.push(`+15 Unverified DNS endpoint without brand DKIM/SPF`);
+    unofficialIdentityScore = 10;
+    explanationPoints.push('+10 Domain is absent from the trusted registry');
   }
 
-  // 7. Visual Identity Analysis (max 15)
-  // Only high visual similarity (>= 75%) on unauthorized accounts contributes risk.
-  // Dissimilar logos or benign fan accounts contribute 0 points, protecting against false positives.
-  if (visualComparison && visualComparison.visualScore >= 75) {
+  if (visualComparison.status === 'available' && visualComparison.visualScore >= 75) {
     visualScore = Math.min(15, Math.round((visualComparison.visualScore / 100) * 15));
-    explanationPoints.push(
-      `+${visualScore} Visual logo mimicry (${visualComparison.visualScore}% deterministic structural & color match)`
-    );
+    explanationPoints.push(`+${visualScore} Visual logo resemblance (${visualComparison.visualScore}% deterministic match)`);
   }
 
-  // Sum total score, capped at 100
-  const rawScore =
-    nameScore +
-    handleScore +
-    lookalikeScore +
-    wordingScore +
-    platformOrPublisherScore +
-    unofficialIdentityScore +
-    visualScore;
-
-  // Name and handle similarities are correlated. Require two additional independent
-  // signal families before assigning High/Critical risk to social accounts.
-  const independentSignals = [lookalikeScore, wordingScore, platformOrPublisherScore, visualScore].filter(score => score > 0).length;
+  const rawScore = nameScore + handleScore + lookalikeScore + wordingScore + platformOrPublisherScore + unofficialIdentityScore + visualScore;
+  const independentSignals = [lookalikeScore, wordingScore, platformOrPublisherScore, visualScore].filter((score) => score > 0).length;
   const calculatedScore = Math.min(isSocial && independentSignals < 2 ? 59 : 100, Math.max(0, rawScore));
-  if (calculatedScore < rawScore) explanationPoints.push('Social risk capped at 59: fewer than two independent suspicious signal families');
-
-  // Determine category
-  let category: 'Critical' | 'High' | 'Medium' | 'Low' | 'Trusted' = 'Low';
-  if (calculatedScore >= 80) {
-    category = 'Critical';
-  } else if (calculatedScore >= 60) {
-    category = 'High';
-  } else if (calculatedScore >= 30) {
-    category = 'Medium';
-  } else {
-    category = 'Low';
+  if (calculatedScore < rawScore) {
+    explanationPoints.push('Social risk capped at 59: fewer than two independent suspicious signal families');
   }
 
-  const whyThisMatters =
-    calculatedScore >= 80
-      ? 'The detected entity closely mimics the protected organization’s public identity while lacking official ownership verification, presenting high risk of customer deceit or credential theft.'
-      : calculatedScore >= 60
-      ? 'Significant trademark and semantic similarity detected without authorized corporate credentials. Recommended for expedited investigation.'
-      : 'Moderate brand correlation detected; entity may be an informal fan community or unauthorized reseller.';
+  const category: DetectionAnalysis['category'] =
+    calculatedScore >= 80 ? 'Critical' :
+    calculatedScore >= 60 ? 'High' :
+    calculatedScore >= 30 ? 'Medium' : 'Low';
 
   return {
     candidateId: candidate.id,
@@ -694,6 +467,8 @@ export function calculateRisk(
     handleSimilarity,
     descriptionSimilarity,
     visualSimilarity: visualComparison,
+    publisherMatch,
+    packageMatch,
     exactBrandTokenFound,
     matchedTokens,
     suspiciousModifiersFound,
@@ -712,54 +487,36 @@ export function calculateRisk(
       visualScore,
     },
     explanationPoints,
-    whyThisMatters,
+    whyThisMatters:
+      calculatedScore >= 80
+        ? 'Multiple independent signals indicate strong brand impersonation risk in this controlled prototype analysis.'
+        : calculatedScore >= 60
+        ? 'Several independent identity signals warrant expedited review.'
+        : 'The candidate has some brand correlation but requires human review before escalation.',
   };
 }
 
-/**
- * Transforms a raw CandidateEntity into a full ThreatItem using deterministic detection
- */
 export function evaluateCandidate(
   brandQuery: string,
   candidate: CandidateEntity,
   verifiedAssets: VerifiedAsset[]
 ): ThreatItem {
   const analysis = calculateRisk(brandQuery, candidate, verifiedAssets);
+  const explainableSignals: ThreatSignal[] = analysis.explanationPoints.map((point, index) => {
+    let type: ThreatSignal['type'] = 'info';
+    if (analysis.category === 'Trusted') type = 'safe';
+    else if (index === 0) type = analysis.calculatedScore >= 80 ? 'critical' : 'high';
+    else if (/look-alike|unicode|typo/i.test(point)) type = 'critical';
+    else if (/terminology|publisher|redirect/i.test(point)) type = 'warning';
 
-  // Map explainable signals
-  const explainableSignals: ThreatSignal[] = analysis.explanationPoints.map(
-    (point, idx) => {
-      let type: 'critical' | 'high' | 'warning' | 'info' | 'safe' = 'warning';
-      if (analysis.category === 'Trusted') {
-        type = 'safe';
-      } else if (idx === 0) {
-        type = analysis.calculatedScore >= 80 ? 'critical' : 'high';
-      } else if (point.includes('Lookalike') || point.includes('substitution')) {
-        type = 'critical';
-      } else if (point.includes('modifier') || point.includes('Terminology')) {
-        type = 'warning';
-      } else {
-        type = 'info';
-      }
-
-      return {
-        label: point.replace(/^\+\d+\s*/, ''),
-        icon:
-          analysis.category === 'Trusted'
-            ? 'verified'
-            : point.includes('resembles') || point.includes('trademark')
-            ? 'badge'
-            : point.includes('substitution') || point.includes('manipulation')
-            ? 'pattern'
-            : point.includes('modifier') || point.includes('Terminology')
-            ? 'warning'
-            : 'gavel',
-        score: parseInt(point.match(/^\+(\d+)/)?.[1] || '0', 10),
-        desc: point,
-        type,
-      };
-    }
-  );
+    return {
+      label: point.replace(/^\+\d+\s*/, ''),
+      icon: analysis.category === 'Trusted' ? 'verified' : /visual/i.test(point) ? 'image' : /package|publisher/i.test(point) ? 'apps' : 'analytics',
+      score: parseInt(point.match(/^\+(\d+)/)?.[1] || '0', 10),
+      desc: point,
+      type,
+    };
+  });
 
   return {
     id: candidate.id,
@@ -781,36 +538,21 @@ export function evaluateCandidate(
     visual: candidate.visual,
     details: {
       ...candidate.details,
-      homographEntropy:
-        analysis.lookalikeSignals.length > 0
-          ? `${analysis.lookalikeSignals[0].technique} [Entropy ${analysis.nameSimilarity}%]`
-          : candidate.details.homographEntropy,
+      homographEntropy: analysis.lookalikeSignals.length
+        ? `${analysis.lookalikeSignals[0].technique} [Similarity ${analysis.nameSimilarity}%]`
+        : candidate.details.homographEntropy,
     },
   };
 }
 
-/**
- * Searches and evaluates candidate entities for the requested brand query
- */
 export function runBrandDetection(
   brandQuery: string,
   allCandidates: CandidateEntity[],
   verifiedAssets: VerifiedAsset[]
 ): ThreatItem[] {
-  if (!brandQuery || !brandQuery.trim()) {
-    return [];
-  }
-
-  // 1. Filter candidates relevant to the searched brand
-  const relevantCandidates = allCandidates.filter((candidate) =>
-    isCandidateRelevant(brandQuery, candidate)
-  );
-
-  // 2. Deterministically evaluate each relevant candidate
-  const results = relevantCandidates.map((c) =>
-    evaluateCandidate(brandQuery, c, verifiedAssets)
-  );
-
-  // 3. Sort by risk score descending (Critical & High first, Trusted at the bottom or top depending on view)
-  return results.sort((a, b) => b.riskScore - a.riskScore);
+  if (!brandQuery.trim()) return [];
+  return allCandidates
+    .filter((candidate) => isCandidateRelevant(brandQuery, candidate))
+    .map((candidate) => evaluateCandidate(brandQuery, candidate, verifiedAssets))
+    .sort((a, b) => b.riskScore - a.riskScore);
 }
