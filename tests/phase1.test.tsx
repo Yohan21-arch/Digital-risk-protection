@@ -88,7 +88,6 @@ test('F: filter-only empty state clears both filters without changing the brand'
 });
 
 test('G: App Store filter is visible, counted, selects and filters the results', () => {
-  // The current demo has no App Store rows; inject one to test the non-empty path.
   const ios = { ...candidates.find(c => c.platform === 'Google Play' && c.targetBrand === 'Paytm')!, id: 'TEST-IOS', handleOrPkg: 'test.ios.paytm', platform: 'App Store' as const };
   const results = runBrandDetection('Paytm', [...candidates, ios], assets);
   const count = results.filter(t => t.platform === 'App Store').length;
@@ -127,12 +126,11 @@ test('description similarity is deterministic, variable, bounded, and visible in
   assert.equal(low.breakdown.handleScore, 0);
   const threat = runBrandDetection('Amazon', [identical], assets)[0];
   const html = renderToStaticMarkup(<DeepInvestigationModal threat={threat} onClose={noop} onDismiss={noop} onMarkTrusted={noop} onSaveDossier={noop} onConfirmTakedown={noop} />);
-  assert.match(html, /App description similarity:.*100%/);
+  assert.match(html, /Description Similarity.*100%/);
 });
 
 test('verified registry total remains separate from matched scan count; networks are dynamic', () => {
   const tree = BrandSearchModule({ ...props, threats: [] });
-  // Render the outer metric cards directly to include their value and description.
   const section: any = nodes(tree).find(n => n.type === 'section');
   const htmls = React.Children.toArray(section.props.children).filter(React.isValidElement).map(n => renderToStaticMarkup(n));
   const verified = htmls.find(h => h.includes('Verified Assets'))!;
