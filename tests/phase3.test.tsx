@@ -101,7 +101,22 @@ test('Phase 3 - 5: candidate merge is ID-stable and supports updates', () => {
   assert.equal(merged[0].name, 'Updated');
 });
 
-test('Phase 3 - 6: registry and candidate intake panels render judge-facing controls', () => {
+test('Phase 3 - 6: imported candidates cannot self-declare official status', () => {
+  const imported = normalizeRuntimeCandidate({
+    id: 'LOCAL-SELF-TRUST-001',
+    targetBrand: 'Paytm',
+    name: 'Paytm Fake Official',
+    handleOrPkg: '@paytm_fake_official',
+    platform: 'X',
+    isKnownOfficial: true,
+    officialEntity: 'Self asserted',
+  });
+
+  assert.equal(imported.isKnownOfficial, false);
+  assert.equal(imported.officialEntity, undefined);
+});
+
+test('Phase 3 - 7: registry and candidate intake panels render judge-facing controls', () => {
   const registryHtml = renderToStaticMarkup(
     <RuntimeRegistryPanel brand="Paytm" onToast={noop} />
   );
