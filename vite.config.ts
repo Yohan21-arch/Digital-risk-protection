@@ -4,10 +4,9 @@ import path from 'path';
 import { defineConfig, type Plugin } from 'vite';
 
 /**
- * Temporary source-level copy guard for the hackathon prototype.
- * It only rewrites presentation strings/classes during Vite compilation; detection logic
- * remains in the TypeScript source modules. This keeps the UI honest about demo data
- * while the large legacy view file is being decomposed in a later refactor.
+ * Source-level presentation guard for the hackathon prototype.
+ * Phase 3 also uses this existing integration seam to place two isolated panels into the
+ * legacy all-in-one OtherViews file without expanding that file further.
  */
 function prototypeCopyGuard(): Plugin {
   const replacements: Array<[string, string]> = [
@@ -64,12 +63,32 @@ function prototypeCopyGuard(): Plugin {
       let next = code;
       for (const [from, to] of replacements) next = next.split(from).join(to);
 
-      // Replace the legacy substring publisher check in App Monitoring with the
-      // already-computed trusted-registry result from the detection engine.
       next = next.replace(
         /const isOfficialPub = \(metadata\?\.officialPublishers \|\| \[\]\)\.some\(\(p\) =>\s*publisher\.toLowerCase\(\)\.includes\(p\.toLowerCase\(\)\)\s*\);/g,
         "const isOfficialPub = t.analysis?.publisherMatch === 'MATCHED';"
       );
+
+      if (id.endsWith('/src/components/OtherViews.tsx')) {
+        if (!next.includes("./RuntimeRegistryPanel")) {
+          next = `import { RuntimeRegistryPanel } from './RuntimeRegistryPanel';\nimport { CandidateIntakePanel } from './CandidateIntakePanel';\n${next}`;
+        }
+
+        const brandProfileMarker = '      {/* SECTION: OFFICIAL VISUAL REFERENCE (Local Browser Pipeline) */}';
+        if (next.includes(brandProfileMarker)) {
+          next = next.replace(
+            brandProfileMarker,
+            `      <RuntimeRegistryPanel brand={brand} onToast={onTriggerToast} />\n\n${brandProfileMarker}`
+          );
+        }
+
+        const detectionMarker = "      {activeTabMode === 'detections' ? (";
+        if (next.includes(detectionMarker)) {
+          next = next.replace(
+            detectionMarker,
+            `      <CandidateIntakePanel onToast={onTriggerToast} />\n\n${detectionMarker}`
+          );
+        }
+      }
 
       return next === code ? null : { code: next, map: null };
     },
@@ -85,8 +104,6 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
