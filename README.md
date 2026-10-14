@@ -4,7 +4,7 @@ Digital Risk Protection for Social & App Monitoring
 
 Mirage helps organizations find and prioritize brand impersonation across social media and mobile app stores. A company defines its official identity once, and Mirage scans external ecosystems for look-alike profiles, fake pages, scam accounts and rogue app listings, then scores each candidate with explainable evidence. Official assets are recognized and never flagged.
 
-Live demo: https://sentinelbrand-virid.vercel.app/
+Live demo: http://sentinelbrand-virid.vercel.app/
 
 Scores are review signals, not final verdicts. Always check the evidence and the trusted registry before acting.
 
@@ -75,8 +75,8 @@ Environment variables
 
 Create a .env file in the project root. Use the names your code actually reads; the typical Vite setup is:
 
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
 Build for production
 bash
 npm run build
