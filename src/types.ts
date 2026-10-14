@@ -166,11 +166,12 @@ export interface TakedownNotice {
 export type NavTab = 
   | 'Overview' 
   | 'Brand Search' 
-  | 'Social Monitoring' 
-  | 'App Monitoring' 
+  | 'Monitoring'
   | 'Detection Center' 
   | 'Verified Assets' 
   | 'Brand Profile' 
   | 'Settings';
 
 export type TopSubTab = 'Global Telemetry' | 'Active Takedowns' | 'Evidence Logs';
+export type MonitoringChannel = 'All' | 'Social Accounts' | 'Mobile Apps';
+export type NavigationTarget = NavTab | 'Social Monitoring' | 'App Monitoring';

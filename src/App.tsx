@@ -4,6 +4,9 @@
  */
 
 import { AnimatePresence, MotionConfig } from 'motion/react';
+import { MonitoringView } from './components/MonitoringView';
+import { resolveNavigation } from './lib/monitoring';
+import { MonitoringChannel, NavigationTarget } from './types';
 import { ViewTransition } from './components/MotionUI';
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -32,8 +35,6 @@ import { EvidenceDossierModal } from './components/EvidenceDossierModal';
 import { Toast, NotificationsModal } from './components/NotificationsModal';
 import {
   OverviewView,
-  SocialMonitoringView,
-  AppMonitoringView,
   DetectionCenterView,
   VerifiedAssetsView,
   BrandProfileView,
@@ -46,6 +47,7 @@ import {
 export default function App() {
   // Navigation State
   const [currentTab, setCurrentTab] = useState<NavTab>('Brand Search');
+  const [monitoringChannel, setMonitoringChannel] = useState<MonitoringChannel>('All');
   const [activeSubTab, setActiveSubTab] = useState<TopSubTab | null>(null);
 
   // Sidebar responsive state
@@ -240,8 +242,10 @@ export default function App() {
   };
 
   // Handle Tab Switch
-  const handleTabChange = (tab: NavTab) => {
-    setCurrentTab(tab);
+  const handleTabChange = (tab: NavigationTarget) => {
+    const destination = resolveNavigation(tab);
+    setCurrentTab(destination.tab);
+    if (destination.channel) setMonitoringChannel(destination.channel);
     setActiveSubTab(null);
   };
 
@@ -347,26 +351,14 @@ export default function App() {
               onOpenTakedown={() => setIsTakedownModalOpen(true)}
               onTriggerToast={showToast}
             />
-          ) : currentTab === 'Social Monitoring' ? (
-            <SocialMonitoringView
-              threats={threats}
-              verifiedAssets={verifiedAssets}
-              takedowns={takedowns}
-              brand={brandQuery}
-              onInvestigate={(t) => setInvestigatingThreat(t)}
-              onOpenTakedown={() => setIsTakedownModalOpen(true)}
-              onTriggerToast={showToast}
-            />
-          ) : currentTab === 'App Monitoring' ? (
-            <AppMonitoringView
-              threats={threats}
-              verifiedAssets={verifiedAssets}
-              takedowns={takedowns}
-              brand={brandQuery}
-              onInvestigate={(t) => setInvestigatingThreat(t)}
-              onOpenTakedown={() => setIsTakedownModalOpen(true)}
-              onTriggerToast={showToast}
-            />
+          ) : currentTab === 'Monitoring' ? (
+            <MonitoringView threats={threats} brand={brandQuery}
+              channel={monitoringChannel} onChannelChange={setMonitoringChannel}
+              onInvestigate={setInvestigatingThreat}
+              onOpenTakedown={(threat) => {
+                setTakedownTargetThreat(threat || null);
+                setIsTakedownModalOpen(true);
+              }} />
           ) : currentTab === 'Detection Center' ? (
             <DetectionCenterView
               threats={threats}
