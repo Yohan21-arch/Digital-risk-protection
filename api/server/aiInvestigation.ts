@@ -1,4 +1,4 @@
-import { analyzeThreat, InvestigationError } from '../server/aiInvestigation';
+import { analyzeThreat, InvestigationError } from '../server/aiInvestigation.js';
 const LIMIT = 24000;
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 /** Vercel Node Web Handler. No credentials or provider error bodies are returned. */
