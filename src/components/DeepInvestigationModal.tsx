@@ -1,3 +1,4 @@
+import { AIInvestigationPanel } from './AIInvestigationPanel';
 import { AnimatedNumber, InvestigationBackdrop, InvestigationPanel } from './MotionUI';
 import React from 'react';
 import { BRAND_METADATA } from '../data/brandMetadata';
@@ -5,6 +6,7 @@ import { ThreatItem } from '../types';
 
 interface DeepInvestigationModalProps {
   threat: ThreatItem | null;
+  brand?: string;
   onClose: () => void;
   onDismiss: (threatId: string) => void;
   onMarkTrusted: (threatId: string) => void;
@@ -31,6 +33,7 @@ const riskClasses: Record<ThreatItem['riskCategory'], string> = {
 
 export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
   threat,
+  brand,
   onClose,
   onDismiss,
   onMarkTrusted,
@@ -179,6 +182,8 @@ export const DeepInvestigationModal: React.FC<DeepInvestigationModalProps> = ({
               ))}
             </div>
           </section>
+
+          <AIInvestigationPanel key={JSON.stringify([brand, threat])} brand={brand || ""} threat={threat} />
 
           <section className="border border-[#c2c7ca]/70 rounded-xl p-4 bg-[#f9f9f8]">
             <span className="font-['JetBrains_Mono'] text-[10px] text-[#515f74] uppercase font-bold">Prototype Infrastructure Metadata</span>

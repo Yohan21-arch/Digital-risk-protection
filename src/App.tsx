@@ -410,6 +410,7 @@ export default function App() {
       {investigatingThreat && (
         <DeepInvestigationModal
           key={investigatingThreat.id}
+          brand={brandQuery}
           threat={investigatingThreat}
           onClose={() => setInvestigatingThreat(null)}
           onDismiss={handleDismissThreat}
