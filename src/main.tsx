@@ -9,11 +9,11 @@ async function bootstrap() {
   if (import.meta.env.DEV) {
     if (hydration.source === 'supabase') {
       console.info(
-        `[SentinalBrand] Supabase dataset loaded: ${hydration.brandCount} brands / ${hydration.candidateCount} candidates.`
+        `[Mirage] Supabase dataset loaded: ${hydration.brandCount} brands / ${hydration.candidateCount} candidates.`
       );
     } else {
       console.warn(
-        `[SentinalBrand] Using local prototype fallback (${hydration.candidateCount} candidates). ${hydration.reason || ''}`
+        `[Mirage] Using local prototype fallback (${hydration.candidateCount} candidates). ${hydration.reason || ''}`
       );
     }
   }

@@ -12,7 +12,7 @@ export function buildInvestigationEvidence(brand: string, threat: ThreatItem, me
       lookalikes: a?.lookalikeSignals.filter(s => s.detected).map(s => `${s.technique}: ${s.original} -> ${s.replacement}`) || [] } });
 }
 export function investigationReport(e: InvestigationEvidence, a: AIThreatAnalysis): string {
-  return ['SENTINALBRAND INVESTIGATION REPORT', `Brand: ${e.brand.name}`, `Candidate: ${e.candidate.name}`, `Identifier: ${e.candidate.identifier}`, `Platform: ${e.candidate.platform}`, `Candidate Type: ${e.candidate.type}`, '', PRINCIPLE,
+  return ['MIRAGE INVESTIGATION REPORT', `Brand: ${e.brand.name}`, `Candidate: ${e.candidate.name}`, `Identifier: ${e.candidate.identifier}`, `Platform: ${e.candidate.platform}`, `Candidate Type: ${e.candidate.type}`, '', PRINCIPLE,
     '', 'DETERMINISTIC ASSESSMENT', `Risk Score: ${e.deterministic.riskScore}/100`, `Risk Category: ${e.deterministic.riskCategory}`,
     ...e.deterministic.signals.map(s => `- ${s.label} (${s.points} pts): ${s.explanation}`),
     `Computed comparisons: ${JSON.stringify({ name: e.deterministic.nameSimilarity, handle: e.deterministic.handleSimilarity, description: e.deterministic.descriptionSimilarity, visual: e.deterministic.visualSimilarity, publisherMatch: e.deterministic.publisherMatch, packageMatch: e.deterministic.packageMatch })}`,

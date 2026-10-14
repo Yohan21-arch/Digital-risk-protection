@@ -36,14 +36,14 @@ export function AIInvestigationPanel({ brand, threat }: { brand: string; threat:
   function download() {
     if (!result) return;
     const url = URL.createObjectURL(new Blob([investigationReport(result.evidence, result.analysis)], { type: 'text/plain;charset=utf-8' }));
-    const link = document.createElement('a'); link.href = url; link.download = 'SentinalBrand-investigation.txt'; link.click();
+    const link = document.createElement('a'); link.href = url; link.download = 'Mirage-investigation.txt'; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000); setReportStatus('Report downloaded.');
   }
   return <section className="border border-[#c2c7ca]/70 rounded-xl p-4 sm:p-5 bg-[#f9f9f8] min-w-0 break-words" aria-label="AI Investigation">
     <h3 className="font-['Noto_Serif',serif] font-bold text-base">AI Investigation</h3>
     <p className="text-xs text-[#515f74] mt-2">{PRINCIPLE}</p>
     <div className="mt-3 p-3 bg-white border border-[#c2c7ca]/60 rounded-lg text-sm">
-      <strong>SentinalBrand Risk: {threat.riskScore} / 100 · {threat.riskCategory}</strong>
+      <strong>Mirage Risk: {threat.riskScore} / 100 · {threat.riskCategory}</strong>
       <p className="text-xs text-[#515f74]">Authoritative deterministic assessment</p>
     </div>
     <p className="text-xs text-[#515f74] mt-3">On request, relevant candidate text, brand references and computed signals are sent to Gemini. AI findings support human review and do not change risk points.</p>

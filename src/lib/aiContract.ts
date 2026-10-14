@@ -13,7 +13,7 @@ export interface InvestigationEvidence {
     nameSimilarity: number | null; handleSimilarity: number | null; descriptionSimilarity: number | null; visualSimilarity: number | null;
     publisherMatch: string; packageMatch: string; suspiciousUnicode: boolean; lookalikes: string[] };
 }
-export const PRINCIPLE = "SentinalBrand's risk score is calculated by our deterministic explainable detection engine. AI operates as an investigation layer that interprets the evidence, performs semantic analysis, and helps analysts understand the threat.";
+export const PRINCIPLE = "Mirage's risk score is calculated by our deterministic explainable detection engine. AI operates as an investigation layer that interprets the evidence, performs semantic analysis, and helps analysts understand the threat.";
 export const PROTOTYPE_NOTICE = 'This hackathon prototype uses controlled and/or simulated monitoring data where live platform monitoring integrations are unavailable.';
 export function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid object');

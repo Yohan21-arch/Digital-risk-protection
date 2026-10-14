@@ -39,7 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex flex-col items-center gap-2.5 pt-1">
               <div
                 className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-[#cce7f0] shadow-inner shrink-0"
-                title="SentinalBrand"
+                title="Mirage"
               >
                 <span
                   className="material-symbols-outlined text-[#cce7f0] text-xl"
@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between px-1 pt-1">
               <div
                 className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-[#cce7f0] shadow-inner shrink-0"
-                title="SentinalBrand"
+                title="Mirage"
               >
                 <span
                   className="material-symbols-outlined text-[#cce7f0] text-xl"

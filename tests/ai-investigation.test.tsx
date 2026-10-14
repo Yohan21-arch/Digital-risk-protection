@@ -97,7 +97,7 @@ test('all verdicts including benign and insufficient evidence render without cha
 });
 test('Deep Investigation works before AI runs, has an explicit action, and reduced-motion markup is visible', () => {
   const html = renderToStaticMarkup(<DeepInvestigationModal threat={social} brand="Paytm" onClose={noop} onDismiss={noop} onMarkTrusted={noop} onSaveDossier={noop} onConfirmTakedown={noop} />);
-  assert.ok(html.includes('Analyze with AI')); assert.ok(html.includes('SentinalBrand Risk:'));
+  assert.ok(html.includes('Analyze with AI')); assert.ok(html.includes('Mirage Risk:'));
   assert.ok(!html.includes('AI Confidence</span>')); assert.ok(html.includes('Mark as Trusted'));
   const panel = renderToStaticMarkup(<AIInvestigationPanel threat={app} brand="Paytm" />);
   assert.ok(!panel.includes('opacity:0')); assert.ok(!panel.includes('animate-spin'));

@@ -202,7 +202,7 @@ function applySupabaseBrandRegistry(rows: SupabaseDatasetRows): void {
         ...(profile || {}),
         name: visual?.label || existing.officialLogo.name,
         imageSrc: visual?.image_path || existing.officialLogo.imageSrc,
-        description: 'Controlled official reference loaded from the SentinalBrand Supabase registry.',
+        description: 'Controlled official reference loaded from the Mirage Supabase registry.',
       },
     };
   }

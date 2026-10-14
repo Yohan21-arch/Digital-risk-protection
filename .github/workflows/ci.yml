@@ -1,4 +1,4 @@
-name: SentinalBrand CI
+name: Mirage CI
 
 on:
   pull_request:

@@ -61,7 +61,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none">
           <div
             className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-[#0f2930] border border-[#2b94d7]/40 flex items-center justify-center text-[#cce7f0] shadow-xs shrink-0"
-            title="SentinalBrand Digital Risk Protection"
+            title="Mirage Digital Risk Protection"
           >
             <span
               className="material-symbols-outlined text-[#2b94d7] text-xl"
@@ -81,7 +81,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               letterSpacing: '0.2px',
             }}
           >
-            SentinalBrand
+            Mirage
           </span>
           <span
             className="hidden sm:inline md:hidden text-[#001319] leading-none whitespace-nowrap select-none"
@@ -92,7 +92,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               letterSpacing: '0.2px',
             }}
           >
-            SentinalBrand
+            Mirage
           </span>
           <span
             className="sm:hidden text-[#001319] leading-none font-bold whitespace-nowrap select-none"
@@ -102,7 +102,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               letterSpacing: '0.2px',
             }}
           >
-            SB
+            M
           </span>
         </div>
 

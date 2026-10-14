@@ -1,6 +1,6 @@
-# SentinalBrand AI investigation
+# Mirage AI investigation
 
-SentinalBrand has two complementary layers: (1) deterministic explainable detection and (2) AI-assisted investigation and semantic analysis. The existing deterministic score is authoritative. Gemini returns a separate verdict and confidence, never a replacement risk score or additional scoring points.
+Mirage has two complementary layers: (1) deterministic explainable detection and (2) AI-assisted investigation and semantic analysis. The existing deterministic score is authoritative. Gemini returns a separate verdict and confidence, never a replacement risk score or additional scoring points.
 
 ## Setup and deployment
 

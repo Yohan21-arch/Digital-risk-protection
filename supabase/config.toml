@@ -1,4 +1,4 @@
-# SentinalBrand Supabase project configuration.
+# Mirage Supabase project configuration.
 # The linked remote project supplies its own project ref; keep secrets out of this file.
 
 [api]
